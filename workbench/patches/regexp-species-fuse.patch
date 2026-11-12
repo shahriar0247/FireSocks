@@ -1,0 +1,408 @@
+--- firefox-main/js/src/builtin/RegExp.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/builtin/RegExp.cpp	2026-11-11 23:18:44.056813500 -0500
+@@ -2659,6 +2659,24 @@
+   return true;
+ }
+ 
++bool js::CanOptimizeRegExpSpecies(JSContext* cx, unsigned argc, Value* vp) {
++  // This can only be called from self-hosted code.
++  CallArgs args = CallArgsFromVp(argc, vp);
++  MOZ_ASSERT(args.length() == 1);
++  MOZ_ASSERT(args[0].isObject());
++
++  JSObject* obj = &args[0].toObject();
++
++  // The shape check implies the object has no own `constructor` property and
++  // the realm's RegExp.prototype as its prototype. The species fuse then
++  // guarantees SpeciesConstructor(obj) resolves to the builtin RegExp
++  // constructor, so callers can skip the SpeciesConstructor lookup entirely.
++  bool optimizable = IsOptimizableRegExpObject(obj, cx) &&
++                     cx->realm()->realmFuses.optimizeRegExpSpeciesFuse.intact();
++  args.rval().setBoolean(optimizable);
++  return true;
++}
++
+ /*
+  * Pattern match the script to check if it is is indexing into a particular
+  * object, e.g. 'function(a) { return b[a]; }'. Avoid calling the script in
+--- firefox-main/js/src/builtin/RegExp.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/builtin/RegExp.h	2026-11-11 21:56:51.234055300 -0500
+@@ -123,6 +123,9 @@
+ [[nodiscard]] extern bool IsOptimizableRegExpObject(JSContext* cx,
+                                                     unsigned argc, Value* vp);
+ 
++[[nodiscard]] extern bool CanOptimizeRegExpSpecies(JSContext* cx,
++                                                   unsigned argc, Value* vp);
++
+ [[nodiscard]] extern bool RegExpBuiltinExec(JSContext* cx,
+                                             Handle<RegExpObject*> regexp,
+                                             Handle<JSString*> string,
+--- firefox-main/js/src/builtin/RegExp.js	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/builtin/RegExp.js	2026-11-11 21:56:58.956813600 -0500
+@@ -946,12 +946,17 @@
+ 
+   // Step 4.
+   var builtinCtor = GetBuiltinConstructor("RegExp");
+-  var C = SpeciesConstructor(rx, builtinCtor);
+-
+   var optimizable =
+-    IsOptimizableRegExpObject(rx) &&
+-    C === builtinCtor &&
++    CanOptimizeRegExpSpecies(rx) &&
+     (limit === undefined || typeof limit === "number");
++  var C;
++  if (!optimizable) {
++    C = SpeciesConstructor(rx, builtinCtor);
++    optimizable =
++      IsOptimizableRegExpObject(rx) &&
++      C === builtinCtor &&
++      (limit === undefined || typeof limit === "number");
++  }
+ 
+   var flags, unicodeMatching, splitter;
+   if (optimizable) {
+@@ -1219,10 +1224,15 @@
+ 
+   // Step 4.
+   var builtinCtor = GetBuiltinConstructor("RegExp");
+-  var C = SpeciesConstructor(rx, builtinCtor);
++  var optimizable = CanOptimizeRegExpSpecies(rx);
++  var C;
++  if (!optimizable) {
++    C = SpeciesConstructor(rx, builtinCtor);
++    optimizable = IsOptimizableRegExpObject(rx) && C === builtinCtor;
++  }
+ 
+   var source, flags, matcher, lastIndex;
+-  if (IsOptimizableRegExpObject(rx) && C === builtinCtor) {
++  if (optimizable) {
+     // Step 5, 9-12.
+     source = UnsafeGetStringFromReservedSlot(rx, REGEXP_SOURCE_SLOT);
+     flags = UnsafeGetInt32FromReservedSlot(rx, REGEXP_FLAGS_SLOT);
+--- firefox-main/js/src/vm/CommonPropertyNames.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/CommonPropertyNames.h	2026-11-11 21:55:59.976415100 -0500
+@@ -117,6 +117,7 @@
+   MACRO_(dollar_ArraySpecies_, "$ArraySpecies")                                \
+   MACRO_(dollar_ArrayValues_, "$ArrayValues")                                  \
+   MACRO_(dollar_RegExpFlagsGetter_, "$RegExpFlagsGetter")                      \
++  MACRO_(dollar_RegExpSpecies_, "$RegExpSpecies")                              \
+   MACRO_(dollar_RegExpToString_, "$RegExpToString")                            \
+   MACRO_(dollar_SharedArrayBufferSpecies_, "$SharedArrayBufferSpecies")        \
+   MACRO_(dollar_TypedArraySpecies_, "$TypedArraySpecies")                      \
+--- firefox-main/js/src/vm/RealmFuses.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/RealmFuses.cpp	2026-11-11 21:56:08.733523900 -0500
+@@ -391,6 +391,11 @@
+                                    cx->names().dollar_ArraySpecies_);
+ }
+ 
++bool js::OptimizeRegExpSpeciesFuse::checkInvariant(JSContext* cx) {
++  return SpeciesFuseCheckInvariant(cx, JSProto_RegExp,
++                                   cx->names().dollar_RegExpSpecies_);
++}
++
+ bool js::OptimizeArrayBufferSpeciesFuse::checkInvariant(JSContext* cx) {
+   return SpeciesFuseCheckInvariant(cx, JSProto_ArrayBuffer,
+                                    cx->names().dollar_ArrayBufferSpecies_);
+--- firefox-main/js/src/vm/RealmFuses.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/RealmFuses.h	2026-11-11 21:56:08.638396800 -0500
+@@ -261,6 +261,18 @@
+   virtual bool checkInvariant(JSContext* cx) override;
+ };
+ 
++// Fuse used to optimize @@species lookups for RegExps. If this fuse is intact,
++// the following invariants must hold:
++//
++// - The builtin `RegExp.prototype` object has a `constructor` property that's
++//   the builtin `RegExp` constructor.
++// - This `RegExp` constructor has a `Symbol.species` property that's the
++//   original accessor.
++struct OptimizeRegExpSpeciesFuse final : public InvalidatingRealmFuse {
++  virtual const char* name() override { return "OptimizeRegExpSpeciesFuse"; }
++  virtual bool checkInvariant(JSContext* cx) override;
++};
++
+ // Guard used to optimize iterating over Map objects. If this fuse is intact,
+ // the following invariants must hold:
+ //
+@@ -384,6 +396,7 @@
+   FUSE(OptimizeTypedArraySpeciesFuse, optimizeTypedArraySpeciesFuse)           \
+   FUSE(OptimizePromiseLookupFuse, optimizePromiseLookupFuse)                   \
+   FUSE(OptimizeRegExpPrototypeFuse, optimizeRegExpPrototypeFuse)               \
++  FUSE(OptimizeRegExpSpeciesFuse, optimizeRegExpSpeciesFuse)                   \
+   FUSE(OptimizeMapObjectIteratorFuse, optimizeMapObjectIteratorFuse)           \
+   FUSE(OptimizeSetObjectIteratorFuse, optimizeSetObjectIteratorFuse)           \
+   FUSE(OptimizeMapPrototypeSetFuse, optimizeMapPrototypeSetFuse)               \
+--- firefox-main/js/src/vm/RegExpObject.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/RegExpObject.cpp	2026-11-11 21:56:32.725080300 -0500
+@@ -153,7 +153,7 @@
+     js::regexp_static_props,
+     js::regexp_methods,
+     js::regexp_properties,
+-    GenericFinishInit<WhichHasRealmFuseProperty::Proto>,
++    GenericFinishInit<WhichHasRealmFuseProperty::ProtoAndCtor>,
+ };
+ 
+ const JSClass RegExpObject::class_ = {
+--- firefox-main/js/src/vm/SelfHosting.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/SelfHosting.cpp	2026-11-11 23:20:25.660278700 -0500
+@@ -1540,6 +1540,8 @@
+     JS_INLINABLE_FN("CanOptimizeArraySpecies",
+                     intrinsic_CanOptimizeArraySpecies, 1, 0,
+                     IntrinsicCanOptimizeArraySpecies),
++    JS_INLINABLE_FN("CanOptimizeRegExpSpecies", CanOptimizeRegExpSpecies, 1, 0,
++                    IntrinsicCanOptimizeRegExpSpecies),
+     JS_FN("ConstructFunction", intrinsic_ConstructFunction, 2, 0),
+     JS_FN("ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1, 0),
+     JS_FN("CopyDataProperties", intrinsic_CopyDataProperties, 3, 0),
+--- firefox-main/js/src/vm/Watchtower.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/vm/Watchtower.cpp	2026-11-11 21:56:12.666572800 -0500
+@@ -525,6 +525,21 @@
+     obj->realm()->realmFuses.optimizeRegExpPrototypeFuse.popFuse(
+         cx, obj->realm()->realmFuses);
+   }
++  if (id.isAtom(cx->names().constructor)) {
++    obj->realm()->realmFuses.optimizeRegExpSpeciesFuse.popFuse(
++        cx, obj->realm()->realmFuses);
++  }
++}
++
++static void MaybePopRegExpConstructorFuses(JSContext* cx, NativeObject* obj,
++                                           jsid id) {
++  if (obj != obj->global().maybeGetConstructor(JSProto_RegExp)) {
++    return;
++  }
++  if (id.isWellKnownSymbol(JS::SymbolCode::species)) {
++    obj->realm()->realmFuses.optimizeRegExpSpeciesFuse.popFuse(
++        cx, obj->realm()->realmFuses);
++  }
+ }
+ 
+ static void MaybePopArrayBufferConstructorFuses(JSContext* cx,
+@@ -635,6 +650,7 @@
+ 
+   // Handle writes to RegExp.prototype fuse properties.
+   MaybePopRegExpPrototypeFuses(cx, obj, id);
++  MaybePopRegExpConstructorFuses(cx, obj, id);
+ 
+   // Handle writes to ArrayBuffer constructor fuse properties.
+   MaybePopArrayBufferConstructorFuses(cx, obj, id);
+--- firefox-main/js/src/jit/CacheIR.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/CacheIR.cpp	2026-11-11 23:20:30.366381600 -0500
+@@ -8085,6 +8085,39 @@
+   return AttachDecision::Attach;
+ }
+ 
++AttachDecision
++InlinableNativeIRGenerator::tryAttachCanOptimizeRegExpSpecies() {
++  // Self-hosted code calls this with a single object argument.
++  MOZ_ASSERT(argsLength() == 1);
++  MOZ_ASSERT(arg(0).isObject());
++
++  Shape* shape = cx_->global()->maybeRegExpShapeWithDefaultProto();
++  if (!shape) {
++    return AttachDecision::NoAction;
++  }
++
++  // Initialize the input operand.
++  initializeInputOperand();
++
++  // Note: we don't need to call emitNativeCalleeGuard for intrinsics.
++
++  RealmFuses& fuses = cx_->realm()->realmFuses;
++  if (fuses.optimizeRegExpSpeciesFuse.intact() &&
++      fuses.optimizeRegExpPrototypeFuse.intact()) {
++    ValOperandId argId = loadArgumentIntrinsic(ArgumentKind::Arg0);
++    ObjOperandId objId = writer.guardToObject(argId);
++    writer.guardFuse(RealmFuses::FuseIndex::OptimizeRegExpSpeciesFuse);
++    writer.guardFuse(RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse);
++    writer.hasShapeResult(objId, shape);
++    trackAttached("CanOptimizeRegExpSpecies.Optimized");
++  } else {
++    writer.loadBooleanResult(false);
++    trackAttached("CanOptimizeRegExpSpecies.Deoptimized");
++  }
++
++  return AttachDecision::Attach;
++}
++
+ AttachDecision InlinableNativeIRGenerator::tryAttachGetFirstDollarIndex() {
+   // Self-hosted code calls this with a single string argument.
+   MOZ_ASSERT(argsLength() == 1);
+@@ -13521,6 +13554,8 @@
+       return tryAttachIsRegExpPrototypeOptimizable();
+     case InlinableNative::IsOptimizableRegExpObject:
+       return tryAttachIsOptimizableRegExpObject();
++    case InlinableNative::IntrinsicCanOptimizeRegExpSpecies:
++      return tryAttachCanOptimizeRegExpSpecies();
+     case InlinableNative::GetFirstDollarIndex:
+       return tryAttachGetFirstDollarIndex();
+     case InlinableNative::IntrinsicRegExpBuiltinExec:
+--- firefox-main/js/src/jit/CacheIRGenerator.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/CacheIRGenerator.h	2026-11-11 23:20:25.957690300 -0500
+@@ -852,6 +852,7 @@
+   AttachDecision tryAttachRegExpHasCaptureGroups();
+   AttachDecision tryAttachIsRegExpPrototypeOptimizable();
+   AttachDecision tryAttachIsOptimizableRegExpObject();
++  AttachDecision tryAttachCanOptimizeRegExpSpecies();
+   AttachDecision tryAttachIntrinsicRegExpBuiltinExec(InlinableNative native);
+   AttachDecision tryAttachIntrinsicRegExpExec(InlinableNative native);
+   AttachDecision tryAttachGetFirstDollarIndex();
+--- firefox-main/js/src/jit/CompilationDependencyTracker.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/CompilationDependencyTracker.h	2026-11-11 23:39:51.808873300 -0500
+@@ -23,6 +23,7 @@
+     GetIteratorBytecode,
+     ArraySpecies,
+     TypedArraySpecies,
++    RegExpSpecies,
+     RegExpPrototype,
+     ObjectProtoHasNoIndexedProps,
+     ArrayProtoHasNoIndexedProps,
+--- firefox-main/js/src/jit/InlinableNatives.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/InlinableNatives.cpp	2026-11-11 23:20:25.561710900 -0500
+@@ -183,6 +183,7 @@
+     case InlinableNative::IntrinsicIsObject:
+     case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
+     case InlinableNative::IntrinsicCanOptimizeArraySpecies:
++    case InlinableNative::IntrinsicCanOptimizeRegExpSpecies:
+     case InlinableNative::IntrinsicToInteger:
+     case InlinableNative::IntrinsicToLength:
+     case InlinableNative::IntrinsicIsConstructing:
+--- firefox-main/js/src/jit/InlinableNatives.h	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/InlinableNatives.h	2026-11-11 23:20:25.312194500 -0500
+@@ -259,6 +259,7 @@
+   _(IntrinsicIsObject)                             \
+   _(IntrinsicIsCrossRealmArrayConstructor)         \
+   _(IntrinsicCanOptimizeArraySpecies)              \
++  _(IntrinsicCanOptimizeRegExpSpecies)             \
+   _(IntrinsicToInteger)                            \
+   _(IntrinsicToLength)                             \
+   _(IntrinsicIsConstructing)                       \
+--- firefox-main/js/src/jit/WarpOracle.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/WarpOracle.cpp	2026-11-11 23:39:51.897443900 -0500
+@@ -883,6 +883,12 @@
+                               CompilationDependency::Type::TypedArraySpecies>;
+       return addDep(Dependency());
+     }
++    case RealmFuses::FuseIndex::OptimizeRegExpSpeciesFuse: {
++      using Dependency =
++          RealmFuseDependency<&RealmFuses::optimizeRegExpSpeciesFuse,
++                              CompilationDependency::Type::RegExpSpecies>;
++      return addDep(Dependency());
++    }
+     case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse: {
+       using Dependency =
+           RealmFuseDependency<&RealmFuses::optimizeRegExpPrototypeFuse,
+--- firefox-main/js/src/jit/WarpCacheIRTranspiler.cpp	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/js/src/jit/WarpCacheIRTranspiler.cpp	2026-11-11 23:39:52.043286500 -0500
+@@ -491,6 +491,7 @@
+     case RealmFuses::FuseIndex::OptimizeGetIteratorBytecodeFuse:
+     case RealmFuses::FuseIndex::OptimizeArraySpeciesFuse:
+     case RealmFuses::FuseIndex::OptimizeTypedArraySpeciesFuse:
++    case RealmFuses::FuseIndex::OptimizeRegExpSpeciesFuse:
+     case RealmFuses::FuseIndex::OptimizeRegExpPrototypeFuse:
+     case RealmFuses::FuseIndex::ObjectProtoHasNoIndexedPropsFuse:
+     case RealmFuses::FuseIndex::ArrayProtoHasNoIndexedPropsFuse:
+--- firefox-main/toolkit/xre/test/win/moz.build	2026-11-11 06:20:50.000000000 -0500
++++ /c/mozilla/firefox/toolkit/xre/test/win/moz.build	2026-11-11 20:41:31.008125500 -0500
+@@ -40,16 +40,13 @@
+     "ws2_32",
+ ]
+ 
++# LOCAL: TestLauncherRegistryInfo.exe link is blocked by AV file-lock on this
++# machine (lld-link: permission denied on write, 3 retries). Test-only target,
++# no product code affected — dropped to unblock the build.
+ if CONFIG["MOZ_LAUNCHER_PROCESS"]:
+     LOCAL_INCLUDES += [
+         "/toolkit/mozapps/update/common",
+     ]
+-    GeckoCppUnitTests(
+-        [
+-            "TestLauncherRegistryInfo",
+-        ],
+-        linkage=None,
+-    )
+     # Needed for TestLauncherRegistryInfo
+     for var in ("MOZ_APP_BASENAME", "MOZ_APP_VENDOR"):
+         DEFINES[var] = '"%s"' % CONFIG[var]
+--- a/js/src/jit-test/tests/basic/testRegExpSpecies.js	2026-11-12 00:07:52.000000000 -0500
++++ b/js/src/jit-test/tests/basic/testRegExpSpecies.js	2026-11-11 22:45:44.808208800 -0500
+@@ -0,0 +1,79 @@
++// Test the RegExp species fuse used by RegExpSplit and RegExpMatchAll.
++
++load(libdir + 'eqArrayHelper.js');
++
++function testSplitDefault() {
++  var r = /a/;
++  assertEqArray("baa".split(r), ["b", "", ""]);
++}
++
++function testSplitSubclassSpecies() {
++  class SubRegExp extends RegExp {
++    static get [Symbol.species]() { return this; }
++  }
++  var r = new SubRegExp("a", "y");
++  r.lastIndex = 1;
++  var parts = "aba".split(r);
++  assertEqArray(parts, ["", "b", ""]);
++}
++
++function testSplitOverriddenSpecies() {
++  var calls = 0;
++  var orig = Object.getOwnPropertyDescriptor(RegExp, Symbol.species).get;
++  Object.defineProperty(RegExp, Symbol.species, {
++    get() { calls++; return orig.call(this); },
++  });
++  try {
++    assertEqArray("aXbXc".split(/X/, 2), ["a", "b"]);
++  } finally {
++    Object.defineProperty(RegExp, Symbol.species, { get: orig });
++  }
++  assertEq(calls > 0, true);
++}
++
++function testSplitOverriddenProtoConstructor() {
++  class Ctor {
++    constructor(rx, flags) { return new RegExp(rx.source, flags); }
++  }
++  var desc = Object.getOwnPropertyDescriptor(RegExp.prototype, "constructor");
++  RegExp.prototype.constructor = Ctor;
++  try {
++    assertEqArray("a1b".split(/1/), ["a", "b"]);
++  } finally {
++    Object.defineProperty(RegExp.prototype, "constructor", desc);
++  }
++}
++
++function testMatchAllDefault() {
++  var r = /t(e)(st(\d?))/g;
++  var str = "test1test2";
++  var matches = [...str.matchAll(r)];
++  assertEq(matches.length, 2);
++  assertEq(matches[0][0], "test1");
++  assertEq(matches[0][3], "1");
++}
++
++function testMatchAllSubclassSpecies() {
++  class SubRegExp extends RegExp {
++    static get [Symbol.species]() { return this; }
++  }
++  var r = new SubRegExp("a", "g");
++  var matches = [...r[Symbol.matchAll]("aa")];
++  assertEq(matches.length, 2);
++}
++
++function testSplitOwnConstructor() {
++  var r = /a/;
++  r.constructor = RegExp;
++  assertEqArray("aaa".split(r), ["", "", "", ""]);
++}
++
++for (var i = 0; i < 10; i++) {
++  testSplitDefault();
++  testSplitSubclassSpecies();
++  testSplitOverriddenSpecies();
++  testSplitOverriddenProtoConstructor();
++  testMatchAllDefault();
++  testMatchAllSubclassSpecies();
++  testSplitOwnConstructor();
++}
