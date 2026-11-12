@@ -72,3 +72,29 @@ Both deltas far exceed the ±2% noise band. H5 confirmed — PGO was the biggest
 Upstream: cleaned 3-way merged (snapshot / upstream-main / local) and opened **PR mozilla-firefox/firefox#445** off `main` @ 5fb56bef (27 files, +431/−10). Fork: `github.com/shahriar0247/FireSocks` (renamed fork). Branches on fork: `shahriar0247/perf-speculative-navigation` (PR head), `firesocks` (perf + branding).
 
 **Branding — FireSocks**: `browser/branding/firesocks` (based on `unofficial`): `MOZ_APP_DISPLAYNAME=FireSocks`, `MOZ_APP_BASENAME=FireSocks` → `firesocks.exe`; brand.ftl/brand.properties renamed; all PNG/ICO/BMP/MSIX assets regenerated from a generated flaming-sock logo (PIL, `firefox-build/bench/firesocks_logo.py`). Build: `obj-firesocks` via `mozconfig-firesocks` — release+cross-LTO, reuses `obj-opt/instrumented/merged.profdata` (`MOZ_PROFILE_USE=1`; rust spec patched with `-Cprofile-use` — the configure-time gap recurs).
+
+## macOS build (2026-01, in progress)
+
+`./mach bootstrap --no-interactive --application-choice browser --no-system-changes` installed Mozilla clang 22.1.8 + `MacOSX27.2.sdk` + `ld64.lld` + samply/profiler-cli into `~/.mozbuild`. Root `mozconfig`: release+opt+cross-LTO, firesocks branding, `-j4`, `MOZ_LD64_KNOWN_GOOD=1` belt-and-suspenders (lld actually selected → gate moot). Configure picked `~/.mozbuild/clang` automatically (mozbuild clang dir is prepended to CC search path), `MOZ_LTO_RUST_CROSS=thin`, lld — LLVM 22 on both sides of cross-LTO (rustc 1.98.0). Verified beforehand with a standalone clang↔rustc thin-LTO link test (earlier Apple-clang test also worked, but Mozilla clang removes all doubt). Full `./mach build` running → `artifacts/build.log`.
+
+## Fortress mode + page-level ad blocking (evaluated, partial land)
+
+`browser.contentblocking.category=strict` already activates the full strict feature bundle from `firefox.js` (`browser.contentblocking.features.strict`): Disconnect lvl2 tracker blocking, cookie partitioning, cryptomining, fingerprinting (FPP), social/email tracking protection, query-param stripping, bounce tracking, referrer restrictions, local-network restrictions. `consentmanagerSkip` is a compat-*easing* flag (ON = don't block consent-manager resources) — correctly left OFF in strict.
+
+Fortress bundle v2 (landed in `SpeedMode.sys.mjs`, commit `8fb77aa`): strict ETP + `unifiedAds.{tiles,spocs}.enabled=false` (sponsored newtab) + `media.autoplay.default=5` (block all) + `permissions.default.desktop-notification=2` (deny prompts).
+
+**Real page-level ad blocking — options evaluated:**
+
+| Mechanism | Packaging | Disableable | Ruleset updates | Verdict |
+|---|---|---|---|---|
+| in-tree list-driven engine | new C++/JS engine | — | — | Rejected: no ad-list engine exists in-tree; building one is a project, not a patch. ETP lists are tracker-format, not EasyList-format |
+| `builtin-addons/` omni.ja (webcompat path) | unpacked dir + jar.mn, auto-registered by `gen_built_in_addons.py` | No — location is `hidden`/`locked`/`isSystem` | Frozen at build time | Viable but weakest |
+| **`distribution/extensions/<id>.xpi`** | xpi file + `FINAL_TARGET_FILES["distribution.extensions"]` | Yes (profile-scope install) | **Self-updates via AMO** | **Chosen** |
+
+`XPIProvider.installDistributionAddons` reads `distribution/extensions/*.xpi` (filename must be `<addon-id>.xpi`), `installDistributionAddon` copies into profile extensions dir, **silently enabled** (OEM mechanism — no opt-in prompt), requires signed state (AMO-signed xpi ships as-is). Version-compared on upgrade; `extensions.installedDistroAddon.<id>` pref prevents resurrection between updates.
+
+Vendored uBlock Origin Lite `2026.1110.1816` Firefox signed xpi (9.3MB; unpacked would be 34MB — 28MB rulesets) → `browser/app/distribution/extensions/uBOLiteRedux@raymondhill.net.xpi`. Manifest: MV3, event-page background (`background.scripts`, module), perms = standard DNR stack (`declarativeNetRequest`, `scripting`, `storage`, `alarms`, `activeTab`, `unlimitedStorage`, `<all_urls>`), 6 rulesets enabled by default (uBlock filters, EasyList, EasyPrivacy, Peter Lowe's, badware, urlhaus) + opt-in annoyance/regional lists toggled per-user via its dashboard. `data_collection_permissions: ["none"]` avoids the data-consent prompt.
+
+Design consequence: **ad blocking is a baseline FireSocks feature, not a mode** — always-on is also perf-positive (DNR matching is native code; blocked requests = less page work). Fortress differentiates via strict ETP + annoyance controls layered on top. Per-mode gating of the addon remains technically possible (profile-scope addon → `AddonManager` `userDisabled` toggle) but is not implemented — would need policy for users who disable it manually.
+
+**Not yet verified** (pending build): xpi lands at `Contents/Resources/distribution/extensions/` on macOS (`XRE_APP_DISTRIBUTION_DIR` = `NS_GRE_DIR/distribution` → RESPATH ✓); silent install on fresh profile; DNR blocking actually fires (test: `https://ublockorigin.github.io/uBOL-home/tests/test-filters.html`).

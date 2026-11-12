@@ -58,9 +58,13 @@ DOM-in-task.
   `obj-opt/instrumented/merged.profdata`.
 - `workbench/mozconfig-js`: standalone JS shell for jit-tests + microbenchmarks.
 
-### macOS arm64 (to establish — 16GB RAM, 10 cores)
+### macOS arm64 (bootstrap DONE 2026-01; build in progress → `artifacts/build.log`)
 ```bash
-./mach bootstrap           # installs Xcode-clang deps, cbindgen, etc.
+./mach --no-interactive bootstrap --application-choice browser --no-system-changes
+# ^ --no-interactive is a GLOBAL mach arg — must precede the subcommand.
+# Installs Mozilla clang 22.1.8 + MacOSX27.2.sdk + ld64.lld + samply/profiler-cli
+# into ~/.mozbuild. Configure auto-picks ~/.mozbuild/clang (LLVM 22 = rustc 1.98
+# LLVM 22 → cross-LTO bitcode parity; standalone clang↔rust thin-LTO test passed).
 cat > mozconfig <<'EOF'
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-opt
 ac_add_options --enable-release
@@ -76,6 +80,7 @@ ac_add_options --disable-updater
 mk_add_options MOZ_MAKE_FLAGS="-j4"   # 16GB RAM — keep low
 export MOZILLA_OFFICIAL=1
 export BUILD_OFFICIAL=1
+export MOZ_LD64_KNOWN_GOOD=1          # cross-LTO gate on Darwin (lld is picked anyway)
 EOF
 ./mach build
 ./mach package             # produces dist/FireSocksNightly.dmg-ish zip
@@ -100,18 +105,33 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
 - `git status`/`git diff` on this tree is slow (488k files) — always scope
   with paths.
 - Never create the PR on GitHub upstream — Phabricator only.
+- `./mach bootstrap` takes `--no-interactive` BEFORE the subcommand only;
+  after it, bootstrap rejects it.
+- `browser/app/distribution/distribution.ini` ships under `MOZILLA_OFFICIAL=1`
+  and claims "Mozilla Firefox Official Build" — functional no-op (telemetry
+  attribution only), but a branding wrinkle if we ever ship real dists.
+- `distribution/extensions/` addon filenames MUST be `<addon-id>.xpi`
+  (`getExpectedID` validates the leafName against the manifest id).
+- rust-objcopy warns about missing `libLLVM.dylib` paths during Rust crate
+  compiles on macOS — cosmetic, build continues.
 
 ## Next work items (priority order)
 
-1. **Build + baseline on this Mac**: get `mach build` green, then
-   `bench/baseline.sh` (Raptor: speedometer3, jetstream3 — see
-   `workbench/bench/`) unprofiled, 3+ runs each.
-2. **Settings UI for `browser.speed.mode`** (Phase 6): `about:preferences`
-   three-stop control — localized Fluent strings, accessible keyboard
-   semantics, per-mode pref diff display. See `workbench/docs/fix-plan.md`.
-3. **Fortress mode real blocking**: strict ETP + annoyance filters; evaluate
-   bundled uBlock Origin vs in-tree list-driven engine. Do not claim uBO parity
-   without resource-level blocking.
+1. **Build + baseline on this Mac** (IN PROGRESS): bootstrap done, configure
+   green (Mozilla clang 22.1.8 + lld + cross-ThinLTO), `./mach build` running
+   → `artifacts/build.log`. Then `bench/baseline.sh` (Raptor: speedometer3,
+   jetstream3 — see `workbench/bench/`) unprofiled, 3+ runs each.
+2. ~~**Settings UI for `browser.speed.mode`**~~ (DONE, commit `8fb77aa`):
+   `speed` settings-group in `tabs-browsing.mjs`, `moz-radio-group` 3-stop
+   control, Fluent strings, flame icon. Still needs live verification on the
+   built app.
+3. **Fortress mode real blocking** (IN PROGRESS): Fortress v2 pref bundle
+   landed (strict ETP + unifiedAds off + autoplay 5 + notification deny 2).
+   uBOL `2026.1110.1816` vendored as `distribution/extensions/` xpi — installs
+   silently enabled per-profile, self-updates via AMO. Design call made:
+   ad blocking = baseline feature (not mode-gated); Fortress = strict-ETP +
+   annoyance layer on top. Still needs live verification of silent install +
+   DNR firing once build lands.
 4. **Hover-prefetch tests**: cancellation on mouseout, private-window gating,
    same-site limits, activation from `FindMatchingPrefetchRecord`, record
    TTL/limits.

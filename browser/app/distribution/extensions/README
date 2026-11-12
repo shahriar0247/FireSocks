@@ -1,0 +1,10 @@
+Bundled extensions installed into each profile on first run
+(distribution/extensions mechanism, toolkit/mozapps/extensions).
+
+uBOLiteRedux@raymondhill.net.xpi
+  uBlock Origin Lite 2026.1110.1816 (Firefox build, AMO-signed).
+  Source: https://github.com/uBlockOrigin/uBOL-home/releases
+  License: GPLv3 (LICENSE.txt inside the xpi).
+  To update: download the latest uBOLite_*.firefox.signed.xpi, rename to
+  the add-on ID, replace this file. Rulesets also self-update via AMO
+  between browser releases.
