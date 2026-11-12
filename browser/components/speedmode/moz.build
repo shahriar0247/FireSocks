@@ -3,8 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZ_SRC_FILES += [
-    "SpeedMode.sys.mjs",
     "SpeculativeLoadActivity.sys.mjs",
+    "SpeedMode.sys.mjs",
 ]
 
 with Files("**"):
