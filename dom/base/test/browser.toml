@@ -178,6 +178,13 @@ support-files = [
   "file_speculation_rules_hover_source.html",
 ]
 
+["browser_speculation_rules_hover_fallback.js"]
+# All channels: the test enables the prefs it needs.
+support-files = [
+  "file_pageload_prefetch_target.sjs",
+  "file_speculation_rules_fallback_source.html",
+]
+
 ["browser_pagehide_on_tab_close.js"]
 skip-if = [
   "true", # this tests non-e10s behavior.

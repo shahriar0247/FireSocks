@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<title>speculation rules fallback source</title>
+<script>
+  const params = new URLSearchParams(location.search);
+  const ruleTarget = params.get("rule_target");
+  if (ruleTarget) {
+    const script = document.createElement("script");
+    script.type = "speculationrules";
+    script.textContent = JSON.stringify({
+      prefetch: [{ source: "list", urls: [ruleTarget], eagerness: "moderate" }],
+    });
+    document.head.appendChild(script);
+  }
+</script>
+<body>
+  <a id="link" href="">hover me</a>
+  <a id="link2" href="">other link</a>
+  <div id="away">empty space</div>
+  <script>
+    document.getElementById("link").href = params.get("target");
+    const target2 = params.get("target2");
+    if (target2) {
+      document.getElementById("link2").href = target2;
+    } else {
+      document.getElementById("link2").remove();
+    }
+  </script>
+</body>
