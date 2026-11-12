@@ -878,10 +878,6 @@ firesocks-mods-speculation-rules =
     .label = Website speculation rules
     .description = Lets websites ask { -brand-short-name } to prefetch pages they expect you to visit next.
 
-firesocks-mods-network-predictor =
-    .label = Network predictor
-    .description = Learns which resources pages are likely to need and prepares connections ahead of time.
-
 firesocks-mods-hover-ssl-connect =
     .label = Preconnect to secure links on hover
     .description = Warms up a connection to a secure site’s server while you hover its link.

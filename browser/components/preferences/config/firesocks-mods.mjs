@@ -12,7 +12,6 @@ Preferences.addAll([
   { id: "dom.speculation_rules.enabled", type: "bool" },
   { id: "network.predictor.enable-hover-on-ssl", type: "bool" },
   { id: "dom.prefetch_dns_for_anchor_https_document", type: "bool" },
-  { id: "network.predictor.enabled", type: "bool" },
   { id: "browser.speed.show_speculative_activity", type: "bool" },
 ]);
 
@@ -23,7 +22,6 @@ const MOD_TOGGLES = [
   ["speculationRules", "dom.speculation_rules.enabled"],
   ["hoverOnSslConnect", "network.predictor.enable-hover-on-ssl"],
   ["anchorHttpsDnsPrefetch", "dom.prefetch_dns_for_anchor_https_document"],
-  ["networkPredictor", "network.predictor.enabled"],
   ["specActivityIndicator", "browser.speed.show_speculative_activity"],
 ];
 
@@ -44,11 +42,6 @@ SettingGroupManager.registerGroups({
       {
         id: "speculationRules",
         l10nId: "firesocks-mods-speculation-rules",
-        control: "moz-checkbox",
-      },
-      {
-        id: "networkPredictor",
-        l10nId: "firesocks-mods-network-predictor",
         control: "moz-checkbox",
       },
       {
