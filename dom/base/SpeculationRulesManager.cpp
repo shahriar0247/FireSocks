@@ -6,6 +6,7 @@
 #include "mozilla/dom/SpeculationRulesManager.h"
 
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/PrefetchIPCTypes.h"
 #include "mozilla/dom/PrefetchLog.h"
@@ -46,6 +47,13 @@ void SpeculationRulesManager::StartPrefetch(Document* aDocument,
       LOG_SPECRULES(("StartPrefetch: already prefetching %s", aCand.url.get()));
       return;
     }
+  }
+
+  if (mPrefetchRecords.Length() >=
+      StaticPrefs::dom_speculation_rules_max_records_per_document()) {
+    LOG_SPECRULES(
+        ("StartPrefetch: record cap reached, dropping %s", aCand.url.get()));
+    return;
   }
 
   auto referrerPolicy = static_cast<ReferrerPolicy>(aCand.referrer_policy);
