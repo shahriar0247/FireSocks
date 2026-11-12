@@ -9,6 +9,6 @@ if CONFIG["BUILT_BY_MOZILLA"]:
         "distribution.ini",
     ]
 
-FINAL_TARGET_FILES["distribution.extensions"] += [
+FINAL_TARGET_FILES["distribution"].extensions += [
     "extensions/uBOLiteRedux@raymondhill.net.xpi",
 ]
