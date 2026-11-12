@@ -22,9 +22,14 @@ const MODE_BUNDLES = {
   },
   // 1 = Balanced — no managed prefs; restores defaults for anything we set.
   1: {},
-  // 2 = Fortress — strict tracking protection incl. cookie-banner handling.
+  // 2 = Fortress — strict tracking protection, no sponsored content,
+  // no autoplay, no notification prompts.
   2: {
     "browser.contentblocking.category": "strict",
+    "browser.newtabpage.activity-stream.unifiedAds.tiles.enabled": false,
+    "browser.newtabpage.activity-stream.unifiedAds.spocs.enabled": false,
+    "media.autoplay.default": 5,
+    "permissions.default.desktop-notification": 2,
   },
 };
 

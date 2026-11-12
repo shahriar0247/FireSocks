@@ -843,6 +843,26 @@ performance-limit-content-process-blocked-desc = Modifying the number of content
 performance-default-content-process-count =
     .label = { $num } (default)
 
+## General Section - Speed
+
+speed-mode-group =
+  .label = Speed
+
+speed-mode-radio-group-label =
+    .aria-label = Speed mode
+
+speed-mode-performance-option =
+    .label = Performance
+    .description = Pre-connects to sites and pre-fetches pages you’re likely to open, so clicks and searches feel instant. May use more network data.
+
+speed-mode-balanced-option =
+    .label = Balanced
+    .description = Default settings, balancing responsiveness and network use.
+
+speed-mode-fortress-option =
+    .label = Fortress
+    .description = Strict tracking protection that blocks more trackers and cross-site cookies. Some sites may not work as expected.
+
 ## General Section - Browsing
 
 browsing-group =

@@ -296,6 +296,7 @@ var gMainPane = {
     initSettingGroup("translations");
     initSettingGroup("spellCheck");
     initSettingGroup("performance");
+    initSettingGroup("speed");
     initSettingGroup("defaultBrowser");
     initSettingGroup("startup");
     initSettingGroup("importBrowserData");

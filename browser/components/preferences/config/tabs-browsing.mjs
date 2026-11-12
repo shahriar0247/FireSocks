@@ -84,6 +84,7 @@ Preferences.addAll([
   { id: "dom.ipc.processCount", type: "int" },
   { id: "dom.ipc.processCount.web", type: "int" },
   { id: "layers.acceleration.disabled", type: "bool", inverted: true },
+  { id: "browser.speed.mode", type: "int" },
 
   // Link previews
   { id: "browser.ml.linkPreview.enabled", type: "bool" },
@@ -643,6 +644,13 @@ Preferences.addSetting({
   },
 });
 
+Preferences.addSetting({
+  id: "speedMode",
+  pref: "browser.speed.mode",
+  get: prefVal => String(prefVal),
+  set: value => parseInt(value, 10),
+});
+
 // Recommendations settings
 Preferences.addSetting({
   id: "cfrRecommendations",
@@ -882,6 +890,35 @@ SettingGroupManager.registerGroups({
       {
         id: "allowHWAccel",
         l10nId: "performance-allow-hw-accel",
+      },
+    ],
+  },
+  speed: {
+    l10nId: "speed-mode-group",
+    headingLevel: 2,
+    iconSrc: "chrome://browser/skin/flame.svg",
+    items: [
+      {
+        id: "speedMode",
+        control: "moz-radio-group",
+        l10nId: "speed-mode-radio-group-label",
+        options: [
+          {
+            id: "speedModePerformance",
+            value: "0",
+            l10nId: "speed-mode-performance-option",
+          },
+          {
+            id: "speedModeBalanced",
+            value: "1",
+            l10nId: "speed-mode-balanced-option",
+          },
+          {
+            id: "speedModeFortress",
+            value: "2",
+            l10nId: "speed-mode-fortress-option",
+          },
+        ],
       },
     ],
   },

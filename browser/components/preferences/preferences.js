@@ -490,6 +490,7 @@ const CONFIG_PANES = Object.freeze({
       "keyboardShortcuts",
       "media",
       "performance",
+      "speed",
       "recommendations",
     ],
     iconSrc: "chrome://global/skin/icons/cursor-arrow.svg",
