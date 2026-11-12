@@ -103,6 +103,9 @@ export const SpeculativeLoadActivity = {
   },
 
   onStop(channel) {
+    if (!this._inflight.size) {
+      return;
+    }
     const browser = this.getBrowser(channel);
     if (browser) {
       const set = this._inflight.get(browser);
