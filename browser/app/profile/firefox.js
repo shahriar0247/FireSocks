@@ -3962,6 +3962,11 @@ pref("browser.speed.mode", 1);
 // in flight, so speculative work is visible to the user.
 pref("browser.speed.show_speculative_activity", true);
 
+// Speculation Rules are Nightly-only upstream; FireSocks enables the API on
+// all channels — it is site opt-in and required for the hover-prefetch
+// speed features. mirror:always means this pref feeds StaticPrefs directly.
+pref("dom.speculation_rules.enabled", true);
+
 // Speculative networking defaults — safe in every mode, so on for all:
 // initiate a DNS/TLS speculative connection when hovering a link on an
 // HTTPS page (stock: only on HTTP pages).
