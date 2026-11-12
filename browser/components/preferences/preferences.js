@@ -329,6 +329,17 @@ const CONFIG_PANES = Object.freeze({
     groupIds: ["firefoxLabsFeatures"],
     module: "chrome://browser/content/preferences/config/firefoxLabs.mjs",
   },
+  firesocksMods: {
+    l10nId: "firesocks-mods-header",
+    iconSrc: "chrome://browser/skin/flame.svg",
+    groupIds: [
+      "firesocksSpeculation",
+      "firesocksUrlbar",
+      "firesocksIndicators",
+    ],
+    module: "chrome://browser/content/preferences/config/firesocks-mods.mjs",
+    visible: () => srdSectionPrefs.all,
+  },
   general: {
     l10nId: "pane-general-title",
     groupIds: [],

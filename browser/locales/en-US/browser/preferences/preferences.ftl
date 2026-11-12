@@ -863,6 +863,51 @@ speed-mode-fortress-option =
     .label = Fortress
     .description = Strict tracking protection that blocks more trackers and cross-site cookies. Some sites may not work as expected.
 
+## FireSocks Mods Pane
+
+firesocks-mods-header = FireSocks Mods
+
+firesocks-mods-speculation-group =
+    .label = Page-load speculation
+
+firesocks-mods-hover-prefetch =
+    .label = Prefetch pages when hovering links
+    .description = Loads likely next pages in the background after a short hover, so they open instantly. Same-site links only; never runs in private windows.
+
+firesocks-mods-speculation-rules =
+    .label = Website speculation rules
+    .description = Lets websites ask { -brand-short-name } to prefetch pages they expect you to visit next.
+
+firesocks-mods-network-predictor =
+    .label = Network predictor
+    .description = Learns which resources pages are likely to need and prepares connections ahead of time.
+
+firesocks-mods-hover-ssl-connect =
+    .label = Preconnect to secure links on hover
+    .description = Warms up a connection to a secure site’s server while you hover its link.
+
+firesocks-mods-anchor-dns-prefetch =
+    .label = Prefetch DNS for links
+    .description = Resolves the addresses of links on secure pages ahead of time.
+
+firesocks-mods-urlbar-group =
+    .label = Address bar
+
+firesocks-mods-urlbar-connect =
+    .label = Preconnect to search engine
+    .description = Prepares a connection to your default search engine while you use the address bar.
+
+firesocks-mods-urlbar-select-connect =
+    .label = Preconnect to highlighted results
+    .description = Warms a connection as you move through address bar suggestions, shaving time off the one you pick.
+
+firesocks-mods-indicators-group =
+    .label = Indicators
+
+firesocks-mods-spec-activity =
+    .label = Show speculative activity on tabs
+    .description = Displays a small bar on a tab while { -brand-short-name } prefetches pages for it in the background.
+
 ## General Section - Browsing
 
 browsing-group =
