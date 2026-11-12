@@ -6,6 +6,7 @@
 
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Encoding.h"
+#include "mozilla/OriginAttributes.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/dom/Document.h"
@@ -429,7 +430,10 @@ Element* SpeculationRules::FindInterestedLink(nsIContent* aContent) const {
 
 void SpeculationRules::HoverPrefetchFallback(nsIContent* aContent) {
   if (!StaticPrefs::dom_speculation_rules_hover_prefetch_all() ||
-      !mDocument->IsFullyActive()) {
+      !mDocument->IsFullyActive() ||
+      mDocument->NodePrincipal()
+          ->OriginAttributesRef()
+          .IsPrivateBrowsing()) {
     return;
   }
 
