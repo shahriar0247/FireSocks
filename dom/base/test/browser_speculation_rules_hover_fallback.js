@@ -64,7 +64,9 @@ add_setup(async function () {
 
 add_task(async function test_hover_prefetches_same_origin_link() {
   const target = targetURL("basic");
-  const fetched = TestUtils.topicObserved("http-on-modify-request", subject => {
+  // stop-request, not modify-request: modify fires before the request reaches
+  // the server, so the SJS counter can still read 0.
+  const fetched = TestUtils.topicObserved("http-on-stop-request", subject => {
     const channel = subject.QueryInterface(Ci.nsIHttpChannel);
     let purpose = "";
     try {
