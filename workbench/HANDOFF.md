@@ -117,10 +117,11 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
 
 ## Next work items (priority order)
 
-1. **Build + baseline on this Mac** (IN PROGRESS): bootstrap done, configure
-   green (Mozilla clang 22.1.8 + lld + cross-ThinLTO), `./mach build` running
-   → `artifacts/build.log`. Then `bench/baseline.sh` (Raptor: speedometer3,
-   jetstream3 — see `workbench/bench/`) unprofiled, 3+ runs each.
+1. **Build + baseline on this Mac**: `./mach build` GREEN (~35min full,
+   ~8min incremental — buildid bump relinks XUL), `./mach package` →
+   `dist/firesocks-162.0a1.en-US.mac.dmg`. Baselines running via
+   `bench/baseline.sh mac-baseline` (needs `PATH` shim: `python3 →
+   /opt/homebrew/bin/python3.11` — raptor rejects system Python 3.14).
 2. ~~**Settings UI for `browser.speed.mode`**~~ (DONE, commit `8fb77aa`):
    `speed` settings-group in `tabs-browsing.mjs`, `moz-radio-group` 3-stop
    control, Fluent strings, flame icon. Still needs live verification on the

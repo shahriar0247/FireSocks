@@ -114,3 +114,13 @@ Design consequence: **ad blocking is a baseline FireSocks feature, not a mode** 
 **Test** (uncommitted, pending built binary): `dom/base/test/browser_speculation_rules_hover_fallback.js` + `file_speculation_rules_fallback_source.html` — SJS `?count=` token accounting for: same-origin hover prefetch fires, mouseout-before-delay cancels (no request), cross-origin rejected, private window silent, duplicate suppression (rule-set + fallback), record-cap enforcement, activation via `deliveryType == "navigational-prefetch"`. Registered in `browser.toml`.
 
 **Verification queue for green build**: `./mach package` → dist xpi at `Contents/Resources/distribution/extensions/` → fresh profile silent-install + DNR fires → run hover-fallback mochitest → unprofiled Speedometer3/JetStream3 ×3 → tab indicator live-check → Mods pane render check.
+
+## macOS build + verification (2026-01-12)
+
+**Build**: green — `obj-opt` release+cross-ThinLTO, Mozilla clang 22.1.8 + ld64.lld, rustc 1.98.0 (LLVM 22 both sides). Wall ~35min full, ~8min per incremental (buildid.h bump forces XUL relink). `mach package` → `dist/firesocks-162.0a1.en-US.mac.dmg`. Fixes needed: `MOZ_SOURCE_REPO`/`MOZ_SOURCE_CHANGESET` env in mozconfig (git clone → empty source-repo.h → packager died on 'no preprocessor directives'); `FINAL_TARGET_FILES["distribution"].extensions` — dotted *string* keys are literal, subdirs are attribute syntax.
+
+**uBOL verified on built app**: fresh headless profile → `extensions/uBOLiteRedux@raymondhill.net.xpi` installed, `active:true`, `visible:true`, `userDisabled:false`, `signedState:2`, `location:app-profile`, v2026.1110.1816. Silent install + manageability confirmed. DNR live-firing on the uBOL test page still pending a windowed check.
+
+**Hover-fallback test suite green**: `browser_speculation_rules_hover_fallback.js` — 11/11 checks pass on the built binary (`./mach test ... --headless`). Verifies: same-origin prefetch fires, mouseout cancels, cross-origin rejected, private-window silent (PB gate works), ruleset-present skips fallback, record cap drops second prefetch, activation reports `deliveryType=navigational-prefetch` with exactly one server hit. One fix: `http-on-stop-request`, not modify-request — modify fires before the request reaches the server so the SJS counter raced to 0.
+
+**Raptor on macOS needs Python ≤3.13**: system `python3` is 3.14 → `PythonVersionException`. Workaround: `PATH=/tmp/py311-bin:$PATH` with `python3 → /opt/homebrew/bin/python3.11` (creates fresh 3.11 mach venvs on first run). Baseline `mac-baseline` running: speedometer3 ×3, jetstream3 ×3, youtube/amazon/cnn/google-search ×1.
