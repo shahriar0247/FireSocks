@@ -124,3 +124,15 @@ Design consequence: **ad blocking is a baseline FireSocks feature, not a mode** 
 **Hover-fallback test suite green**: `browser_speculation_rules_hover_fallback.js` — 11/11 checks pass on the built binary (`./mach test ... --headless`). Verifies: same-origin prefetch fires, mouseout cancels, cross-origin rejected, private-window silent (PB gate works), ruleset-present skips fallback, record cap drops second prefetch, activation reports `deliveryType=navigational-prefetch` with exactly one server hit. One fix: `http-on-stop-request`, not modify-request — modify fires before the request reaches the server so the SJS counter raced to 0.
 
 **Raptor on macOS needs Python ≤3.13**: system `python3` is 3.14 → `PythonVersionException`. Workaround: `PATH=/tmp/py311-bin:$PATH` with `python3 → /opt/homebrew/bin/python3.11` (creates fresh 3.11 mach venvs on first run). Baseline `mac-baseline` running: speedometer3 ×3, jetstream3 ×3, youtube/amazon/cnn/google-search ×1.
+
+## Prefetch scheduler design (urlbar document prefetch — deferred)
+
+Goal: prefetch the urlbar heuristic/top result's document so Enter = near-instant load. Findings:
+
+- Prefetch records are IPDL-managed on the WGP (`ManagedPPrefetchRecordParent`) — no chrome-JS entry point exists today; `WindowGlobalActors.webidl` exposes nothing prefetch-related.
+- Feasible path without new IPDL: `[ChromeOnly] void Document.startPrefetch(DOMString url)` → synthesize a moderate `PrefetchCandidate` (reuse `HoverPrefetchFallback`'s construction) → `EnsureSpeculationRulesManager()->StartPrefetch` (inherits dedup + cap + same-site checks for free).
+- Chrome reaches it via a JSWindowActor query: urlbar controller → `browser.browsingContext.currentWindowGlobal` actor → child calls `content.document.startPrefetch(url)`.
+- Rate-limit: only on selection-confirming signals (e.g. autofill result present + user pause), never per keystroke. Bandwidth cost is real; gate behind `browser.speed.mode` or a new `browser.urlbar.speculativeConnect.prefetch` pref.
+- Alternative considered and rejected: parent-side `PrefetchRecordParent` construction bypasses IPDL — actor registration is IPC-bound (Managed* list), so it would need an IPDL factory change too; document-side path reuses everything.
+
+Other checked-and-deferred knobs: `dom.ipc.processPrelaunch` already on (3 procs, 1s delay); bfcache `max_total_viewers=-1` auto (pinning risks memory); early hints + h3 + HTTPS-RR defaults already upstream-tuned; `network.predictor.*` family removed upstream except hover-on-ssl.
