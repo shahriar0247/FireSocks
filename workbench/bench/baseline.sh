@@ -6,12 +6,20 @@
 # Pass --profile as 2nd arg to attach the Gecko profiler (analysis runs only).
 
 set -u
+# Keep the machine awake for the duration; re-exec under caffeinate once.
+if [ -z "${CAFFEINATED:-}" ]; then
+  CAFFEINATED=1 exec caffeinate -dimsu bash "$0" "$@"
+fi
 # Repo root = two levels up from this script (workbench/bench/).
 SRC="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="$(dirname "$0")/results"
 LABEL=${1:-baseline}
 PROFILE_ARG=""
 [ "${2:-}" = "--profile" ] && PROFILE_ARG="--gecko-profile"
+# Headless by default — survives a locked screen and idle occlusion.
+# HEADLESS=0 for a headful run.
+HEADLESS_ARG=""
+[ "${HEADLESS:-1}" = "1" ] && HEADLESS_ARG="--browsertime-arg headless=true"
 mkdir -p "$OUT"
 mkdir -p "$SRC/artifacts"
 
@@ -21,7 +29,7 @@ run_raptor() {
   local test=$1
   local logf=$SRC/artifacts/raptor-$LABEL-$test.log
   echo "=== raptor $test → $OUT/$LABEL-$test.log ==="
-  ./mach raptor -t "$test" $PROFILE_ARG 2>&1 | tee "$logf"
+  ./mach raptor -t "$test" $PROFILE_ARG $HEADLESS_ARG 2>&1 | tee "$logf"
   cp -f "$logf" "$OUT/$LABEL-$test.log"
 }
 
