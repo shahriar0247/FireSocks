@@ -19,6 +19,9 @@ const MODE_BUNDLES = {
     "dom.prefetch_dns_for_anchor_https_document": true,
     "dom.speculation_rules.enabled": true,
     "dom.speculation_rules.hover_prefetch_all": true,
+    // Halve the hover→prefetch reaction delay (more false-positive
+    // prefetches is the accepted trade-off in this mode).
+    "dom.speculation_rules.moderate_hover_delay_ms": 100,
   },
   // 1 = Balanced — no managed prefs; restores defaults for anything we set.
   1: {},
