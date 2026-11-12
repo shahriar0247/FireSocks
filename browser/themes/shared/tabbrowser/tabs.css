@@ -1198,6 +1198,55 @@ tab-split-view-wrapper[dragtarget] {
   outline-offset: var(--focus-outline-inset);
 }
 
+/* Speculative-load activity indicator (FireSocks speed mode): a thin line at
+   the tab edge that sweeps while a speculation-rules prefetch for the tab is
+   in flight. */
+.tab-spec-load-line {
+  display: none;
+}
+
+.tabbrowser-tab[speculativeload] > .tab-stack > .tab-background > .tab-spec-load-line {
+  display: -moz-box;
+  height: 2px;
+  margin: 0 calc(var(--tab-border-radius) / 2);
+  border-radius: var(--border-radius-xsmall);
+  background-color: var(--tab-icon-fill-loading, AccentColor);
+  opacity: 0.75;
+  position: relative;
+
+  #tabbrowser-tabs[orient="vertical"] & {
+    height: auto;
+    width: 2px;
+    margin: calc(var(--tab-border-radius) / 2) 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabbrowser-tab[speculativeload] > .tab-stack > .tab-background > .tab-spec-load-line::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.85),
+      transparent
+    );
+    background-size: 200% 100%;
+    animation: tab-spec-load-sweep 1.2s linear infinite;
+  }
+}
+
+@keyframes tab-spec-load-sweep {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 /* Container stroke indicator. Colors come from the --identity-* custom
    properties set by the container color classes in usercontext.css. */
 @media not -moz-pref("browser.nova.enabled") {

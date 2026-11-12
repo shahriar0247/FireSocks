@@ -529,6 +529,10 @@ const PREF_URLBAR_DEFAULTS = /** @type {PreferenceDefinition[]} */ ([
   // Whether speculative connections should be enabled.
   ["speculativeConnect.enabled", true],
 
+  // Whether keyboard selections in the view should warm a speculative
+  // connection to the selected result (FireSocks speed mode).
+  ["speculativeConnect.select", true],
+
   // If true, top sites may include sponsored ones.
   ["sponsoredTopSites", false],
 

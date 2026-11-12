@@ -65,6 +65,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   SessionStartup:
     "moz-src:///browser/components/sessionstore/SessionStartup.sys.mjs",
   SpeedMode: "moz-src:///browser/components/speedmode/SpeedMode.sys.mjs",
+  SpeculativeLoadActivity:
+    "moz-src:///browser/components/speedmode/SpeculativeLoadActivity.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
@@ -840,6 +842,7 @@ BrowserGlue.prototype = {
     lazy.PageDataService.init();
     lazy.ExtensionsUI.init();
     lazy.SpeedMode.init();
+    lazy.SpeculativeLoadActivity.init();
 
     let signingRequired;
     if (AppConstants.MOZ_REQUIRE_SIGNING) {

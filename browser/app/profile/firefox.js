@@ -3958,6 +3958,10 @@ pref("distribution.mozillaonline.ignore", true);
 // trade-offs. See Phase 6 of the performance plan.
 pref("browser.speed.mode", 1);
 
+// Show a progress indicator on tabs that have speculative prefetch fetches
+// in flight, so speculative work is visible to the user.
+pref("browser.speed.show_speculative_activity", true);
+
 // Speculative networking defaults — safe in every mode, so on for all:
 // initiate a DNS/TLS speculative connection when hovering a link on an
 // HTTPS page (stock: only on HTTP pages).

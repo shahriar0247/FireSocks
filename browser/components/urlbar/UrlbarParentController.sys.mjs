@@ -246,7 +246,9 @@ export class UrlbarParentController {
     this.manager
       .getProvider(result?.providerName)
       ?.tryMethod("onSelection", result);
-    this.speculativeConnect(result, null, "select");
+    if (lazy.UrlbarPrefs.get("speculativeConnect.select")) {
+      this.speculativeConnect(result, null, "select");
+    }
   }
 
   /**

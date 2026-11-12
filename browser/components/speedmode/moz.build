@@ -4,6 +4,7 @@
 
 MOZ_SRC_FILES += [
     "SpeedMode.sys.mjs",
+    "SpeculativeLoadActivity.sys.mjs",
 ]
 
 with Files("**"):
