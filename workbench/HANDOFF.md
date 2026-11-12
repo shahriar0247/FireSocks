@@ -132,9 +132,26 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
    ad blocking = baseline feature (not mode-gated); Fortress = strict-ETP +
    annoyance layer on top. Still needs live verification of silent install +
    DNR firing once build lands.
-4. **Hover-prefetch tests**: cancellation on mouseout, private-window gating,
-   same-site limits, activation from `FindMatchingPrefetchRecord`, record
-   TTL/limits.
+4. **Hover-prefetch tests** (tests written, run pending build):
+   `browser_speculation_rules_hover_fallback.js` covers same-origin fire,
+   mouseout-cancel, cross-origin reject, PB silence, ruleset-present skip,
+   record-cap, activation deliveryType. C++ landed: PB gate on
+   `HoverPrefetchFallback` (`6d0ae47`) + `max_records_per_document`
+   enforcement in `StartPrefetch` (`ea0a0e9`).
+4b. **Speculative-activity tab indicator** (landed `f56093a6`, verify on
+   build): `SpeculativeLoadActivity.sys.mjs` observes prefetch channels
+   (`Sec-Purpose: prefetch` + TYPE_OTHER) → `speculativeload` attr on owning
+   tab → `.tab-spec-load-line` sweeping bar (horizontal + vertical tabs,
+   reduced-motion safe). Pref: `browser.speed.show_speculative_activity`.
+4c. **FireSocks Mods pane** (landed `5e8ca8fc`, SRD-only): per-feature
+   toggles for urlbar connect (engine + on-selection), hover prefetch,
+   speculation rules, HTTPS hover connect, anchor DNS prefetch, activity
+   indicator. NOTE: `network.predictor.enabled` is dead — Predictor module
+   removed upstream (`a66a4382`). `dom.speculation_rules.enabled` flipped
+   default-true in firefox.js — upstream is Nightly-only (`dc3cca05`).
+4d. **Urlbar select-connect gate**: `browser.urlbar.speculativeConnect.select`
+   added to UrlbarPrefs schema; `onSelection` connect now independently
+   toggleable (`f56093a6`).
 5. **Layout/style internals**: 75% of layout samples are RefreshDriver
    interruptible flushes — needs frame-construction/style micro-opts, not
    sync-reflow suppression. Symbol build required for attribution.
