@@ -1,0 +1,25 @@
+{
+  "label": "baseline",
+  "platform": "macOS aarch64",
+  "build": "opt+ThinLTO",
+  "mode": "headless, unprofiled",
+  "note": "tp6 site loads excluded \u2014 need compositor",
+  "runs": {
+    "jetstream3": {
+      "scores": [
+        223.099,
+        233.148,
+        243.04
+      ],
+      "median": 233.148
+    },
+    "speedometer3": {
+      "scores": [
+        37.001,
+        37.037,
+        37.415
+      ],
+      "median": 37.037
+    }
+  }
+}

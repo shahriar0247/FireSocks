@@ -48,10 +48,14 @@ run_raptor_n speedometer3 3
 # JS/Wasm throughput (higher better), 3 runs
 run_raptor_n jetstream3 3
 
-# Real-page loads (recorded pages; lower better). Single run each —
-# add sites as needed: amazon cnn ebay espn google-search reddit twitter youtube
-for site in youtube amazon cnn google-search; do
-  run_raptor "$site"
-done
+# Real-page loads (recorded pages; lower better). Opt-in: SITES=1.
+# tp6 needs a compositor — LCP/renderTime are absent in headless and
+# raptor fails with MissingResultsError. Run these headful only:
+#   HEADLESS=0 SITES=1 bash bench/baseline.sh <label>
+if [ "${SITES:-0}" = "1" ]; then
+  for site in youtube amazon cnn google-search; do
+    run_raptor "$site"
+  done
+fi
 
 echo "Done. Results in $OUT and artifacts/"

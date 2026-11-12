@@ -130,8 +130,15 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
    **macOS baselines (opt build, ThinLTO, headless, unprofiled):**
    Speedometer 3 = **37.04 / 37.42 / 37.00** → median **37.04**
    (headful sanity run scored 36.81 — headless≈headful here).
+   JetStream 3 = **243.04 / 233.15 / 223.10** → median **233.15**;
+   the −8% run-to-run decline looks like thermal throttle — for
+   compare runs, keep ordering consistent or cool between suites.
+   tp6 site loads excluded from the default harness: they need a
+   compositor (LCP/renderTime missing headless → MissingResultsError).
+   `SITES=1 HEADLESS=0` runs them. Summary JSON committed at
+   `workbench/bench/results/baseline-summary.json`.
    Compare Windows machine: 10.5 non-PGO / 12.08 PGO — different
-   hardware, do not compare across machines. JetStream + tp6 pending.
+   hardware, do not compare across machines.
 2. ~~**Settings UI for `browser.speed.mode`**~~ (DONE, commit `8fb77aa`):
    `speed` settings-group in `tabs-browsing.mjs`, `moz-radio-group` 3-stop
    control, Fluent strings, flame icon. Still needs live verification on the
