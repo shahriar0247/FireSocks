@@ -122,6 +122,10 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
    `dist/firesocks-162.0a1.en-US.mac.dmg`. Baselines running via
    `bench/baseline.sh mac-baseline` (needs `PATH` shim: `python3 →
    /opt/homebrew/bin/python3.11` — raptor rejects system Python 3.14).
+   Harness now defaults to `--browsertime-arg headless=true` +
+   `caffeinate -dimsu` re-exec: a headful run STALLS indefinitely when
+   the display locks (occluded page, throttled rAF — observed live).
+   `HEADLESS=0` for headful, but keep the session unlocked.
 2. ~~**Settings UI for `browser.speed.mode`**~~ (DONE, commit `8fb77aa`):
    `speed` settings-group in `tabs-browsing.mjs`, `moz-radio-group` 3-stop
    control, Fluent strings, flame icon. Still needs live verification on the
