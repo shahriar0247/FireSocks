@@ -126,6 +126,12 @@ profileserver needs a free port (SP3 on :8000 or :8180). Then re-baseline.
    `caffeinate -dimsu` re-exec: a headful run STALLS indefinitely when
    the display locks (occluded page, throttled rAF — observed live).
    `HEADLESS=0` for headful, but keep the session unlocked.
+
+   **macOS baselines (opt build, ThinLTO, headless, unprofiled):**
+   Speedometer 3 = **37.04 / 37.42 / 37.00** → median **37.04**
+   (headful sanity run scored 36.81 — headless≈headful here).
+   Compare Windows machine: 10.5 non-PGO / 12.08 PGO — different
+   hardware, do not compare across machines. JetStream + tp6 pending.
 2. ~~**Settings UI for `browser.speed.mode`**~~ (DONE, commit `8fb77aa`):
    `speed` settings-group in `tabs-browsing.mjs`, `moz-radio-group` 3-stop
    control, Fluent strings, flame icon. Still needs live verification on the
