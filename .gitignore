@@ -435,3 +435,8 @@ CLAUDE.local.md
 
 # ThinLTO parallel-codegen object dirs emitted at the repo root during link
 *.lto.o/
+workbench/controls/
+workbench/bench/results/*.browsertime.json
+workbench/bench/results/*.prov.json
+workbench/bench/results/*.FAILED
+workbench/mozconfigs/.mozconfig-pgo-use.resolved

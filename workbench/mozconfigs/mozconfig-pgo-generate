@@ -1,0 +1,21 @@
+# Stage-1 PGO instrumented build (CI-style --enable-profile-generate=cross).
+# LTO is auto-disabled for instrumented builds; tests and debug symbols are
+# off to fit the instrumented tree in limited disk.
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-pgo-instr
+ac_add_options --enable-release
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --disable-debug-symbols
+ac_add_options --disable-tests
+ac_add_options --enable-application=browser
+ac_add_options --with-branding=browser/branding/firesocks
+export MOZ_APP_BASENAME=FireSocks
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+export MOZILLA_OFFICIAL=1
+export BUILD_OFFICIAL=1
+export MOZ_LD64_KNOWN_GOOD=1
+export MOZ_SOURCE_REPO="https://github.com/shahriar0247/FireSocks"
+export MOZ_SOURCE_CHANGESET="$(git -C "$topsrcdir" rev-parse HEAD 2>/dev/null || true)"
+ac_add_options --enable-profile-generate=cross

@@ -162,3 +162,42 @@ as a real-world jank dial more than a benchmark win.
 future A/B must interleave C/T/C/T, not batch controls then treatments.
 JetStream showed the inverse: −8% decline across back-to-back runs
 (thermal throttle). Let the machine cool between suites.
+
+## Execution session 2 (2026-11-12 →)
+
+### PGO propagation root cause (verified at source)
+`MOZ_PGO=1 mach build` appends env `MOZ_PROFILE_GENERATE=1`/`MOZ_PROFILE_USE=1`.
+For env-backed configure options, value "1" maps to `PositiveOptionValue()` —
+an EMPTY tuple (python/mozbuild/mozbuild/configure/options.py:456). But
+`moz_pgo_rust` (build/moz.configure/lto-pgo.configure:226) requires the literal
+value `"cross"` → `want_cross` false → `rust_pgo_flags` returns [] →
+`MOZ_RUSTFLAGS_TARGET_LTOABLE` never receives `-Cprofile-use` → generated
+`.cargo-library-spec.json` lacks it → rust objects embed a default
+ProfileSummary → ThinLTO link ProfileSummary conflict. This is why the Windows
+run needed hand-edited spec JSON.
+
+**Fix at the generator, not the generated file**: invoke configure the way CI
+does — `--enable-profile-generate=cross` / `--enable-profile-use=cross`
+(browser/config/mozconfigs/*/profile-generate, build/mozconfig.common:27).
+Value `("cross",)` passes `want_cross` → rust gets `-Cprofile-generate`/
+`-Cprofile-use=<path>` in the spec at generation time. No tree patch needed.
+Mozconfigs: `workbench/mozconfigs/mozconfig-pgo-{generate,use}`,
+driver `workbench/bench/pgo-stage23.sh`.
+
+### 1B scope note (global speculation budget)
+Enforcement point found: `SpeculationRulesManager::StartPrefetch`
+(dom/base/SpeculationRulesManager.cpp:26) — per-document cap already enforced
+(`mPrefetchRecords.Length() >= max_records_per_document`). Records are
+`PrefetchRecordChild` actors created via `WindowGlobalChild` IPDL
+(`SendPPrefetchRecordConstructor`); the PARENT side is `PrefetchRecordParent`
+registered on the WGP's ManagedPPrefetchRecordParent list. A browser-wide
+budget would count outstanding parent actors — feasible in parent process,
+needs a shared counter (per tab + global) in `PrefetchRecordParent::Init`/
+destruction + admission check at construction. M effort confirmed.
+
+### Repo/upstream facts
+- Shallow clone: root `be3b973f` = snapshot boundary (no upstream history).
+  Version 162.0a1, snapshot ≈ mozilla main 2026-11-11/12.
+- Upstream HEAD at session start: `09b865211` — essentially current.
+- Control binary preserved: `workbench/controls/FireSocks-control-thinlto.app`
+  (adhoc-signed app copy of the opt+ThinLTO build, from packaged DMG source).
