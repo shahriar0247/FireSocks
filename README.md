@@ -68,6 +68,48 @@ nothing is silently weakened.
   (headful stalls when the display locks), `SITES=1 HEADLESS=0` for tp6
   pageload runs, Python ≤3.13 required.
 
+## Changelog — v1 (Windows x64, 2026-11-12)
+
+### Build
+- Three-stage PGO + cross-module ThinLTO pipeline brought up from a source
+  snapshot: instrumented binary → profileserver run → `-fprofile-use` stage;
+  Rust `-Cprofile-use` spec fix; instrumented-stage rust LTO removed to fit
+  commit memory.
+- Result (unprofiled): Speedometer 3 **10.5 → 12.08 (+15%)**, JetStream 3
+  **75.3 → 94.03 (+25%)**.
+
+### SpiderMonkey
+- RegExp species fuse (bug 1956245 direction): `OptimizeRegExpSpeciesFuse` +
+  `CanOptimizeRegExpSpecies` intrinsic, CacheIR stub, Warp
+  `CompilationDependency::Type::RegExpSpecies`. `split`/`matchAll` skip
+  `SpeciesConstructor` while `RegExp.prototype.constructor`/`@@species` are
+  default. Micro: split ~6.6–12.5%, matchAll ~0.9–7.4%. All jit-tests +
+  non262/RegExp pass.
+
+### Speculative navigation
+- Urlbar: `speculativeConnect` on keyboard selection; private windows gated
+  via `PrivateBrowsingUtils`.
+- Hover prefetch (`dom.speculation_rules.hover_prefetch_all`): pages with no
+  rule sets synthesize a moderate-eagerness `PrefetchCandidate` on
+  same-origin link hover → activation through `PrefetchRecordParent`.
+- New defaults: HTTPS hover preconnect, HTTPS anchor DNS prefetch.
+
+### Speed mode
+- `browser.speed.mode` dial + `SpeedMode.sys.mjs`: 0 = Performance
+  (speculative-parallel 40, 10 conns/server, DNS 300 s, speculation rules +
+  hover prefetch), 1 = Balanced (default), 2 = Fortress. Applied prefs
+  tracked for clean switching.
+
+### Branding & distribution
+- `browser/branding/firesocks/` brand dir + generated flaming-sock logo
+  (all PNG/ICO/BMP/MSIX/SVG assets).
+- Windows install via binary patch of the PGO build: `firesocks.exe`, all
+  icon resource groups replaced, `application.ini` Vendor/Name/
+  RemotingName=FireSocks, Desktop + Start Menu shortcuts →
+  `%LOCALAPPDATA%\FireSocks`.
+- Upstream PR mozilla-firefox/firefox#445 (auto-closed — Phabricator-only);
+  patch at `workbench/patches/upstream-perf-bundle.patch`.
+
 ---
 
 ![Firefox Browser](./docs/readme/readme-banner.svg)
