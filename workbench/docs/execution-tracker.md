@@ -16,17 +16,17 @@ investigated-no-patch / reverted.
 
 | Task | Disposition | Evidence/artifacts |
 |---|---|---|
-| 0A Paired A/B runner | in-progress | `workbench/bench/ab.sh` + `report.py` |
-| 0B Thermal/statistical discipline | in-progress | folded into ab.sh + docs |
-| 0C User-journey matrix | pending | subset via raptor/browsertime |
+| 0A Paired A/B runner | done | `ab.sh`/`extract.py`/`report.py` — validated: reject-incomplete (exit 2), A/A zero-diff, runid collision fixed |
+| 0B Thermal/statistical discipline | done | ab.sh thermal_wait (CPU_Speed_Limit+loadavg gates), caffeinate, counterbalanced suites, bootstrap CIs, provenance JSON |
+| 0C User-journey matrix | in-progress | `journeys.sh` (talos other + sessionrestore-many-windows + tp6 headful + AWSY); control talos 'other' suite captured during stage-1 build |
 | 0D Critical-path attribution | pending | needs PGO build for fresh profile |
 
 ## Phase 1 — build + navigation
 
 | Task | Disposition | Evidence/artifacts |
 |---|---|---|
-| 1A macOS PGO | in-progress | 3-stage manual pipeline (=cross mozconfigs), disk-risk monitored |
-| 1B Global speculation budget | pending | |
+| 1A macOS PGO | in-progress | stage-1 instrumented building in obj-pgo-instr; =cross mozconfigs fix rust propagation at source (see investigation.md) |
+| 1B Global speculation budget | pending | scoped: enforcement point = PrefetchRecordParent::Init (parent-side count at IPDL registration) |
 | 1C Intent ranking | pending | |
 
 ## Phase 2 — predictive navigation
@@ -73,3 +73,29 @@ investigated-no-patch / reverted.
 | 6A Upstream delta queue | pending | remote freshness check |
 | 6B Compiler experiments post-PGO | pending | |
 | 6C Prerender/parallel-layout feasibility | pending | doc-only |
+
+## Runbook (resume here)
+
+1. `bash workbench/bench/pgo-stage23.sh all` — package instr build,
+   run profileserver (SP3+JS3 local corpus, ports 8000/8001/8888 needed),
+   then stage-3 profile-use build into obj-opt. Logs → artifacts/pgo/.
+   Requires: merged.profdata non-empty; jarlog optional.
+   CAUTION: do not edit engine sources until step 4 finishes.
+2. Preserve PGO app for A/B: `rsync -a --delete obj-opt/dist/FireSocks.app/
+   workbench/controls/FireSocks-pgo.app/` (only if PGO build succeeds).
+3. A/B (quiet machine): `cd workbench/bench &&
+   BLOCKS=4 TESTS=speedometer3,jetstream3 bash ab.sh pgo-ab
+   ../controls/FireSocks-control-thinlto.app
+   ../controls/FireSocks-pgo.app`
+   then `python3 report.py pgo-ab --aa` (A/A noise check) and
+   `python3 report.py pgo-ab` for the paired report
+   (rejects incomplete blocks, exit 2).
+   Keep if median diff CI excludes 0 and > +2%; else revert PGO mozconfig.
+4. Startup A/B: swap control .app into obj-opt/dist/, run
+   `./mach talos-test --activeTests ts_paint` quiet, then run with PGO app;
+   restore. (talos has no --binary flag.)
+5. Then implement frozen feature work (1B ready: design in investigation.md;
+   StaticPrefList additions must be batched — rebuilds much of tree).
+6. Final: mode matrix smoke (browser.speed.mode 0/1/2), package
+   (`MOZCONFIG=mozconfig ./mach package`), fresh+upgrade profile smoke,
+   docs updates, logical commits, push, confirm remote HEAD.

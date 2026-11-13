@@ -201,3 +201,42 @@ destruction + admission check at construction. M effort confirmed.
 - Upstream HEAD at session start: `09b865211` — essentially current.
 - Control binary preserved: `workbench/controls/FireSocks-control-thinlto.app`
   (adhoc-signed app copy of the opt+ThinLTO build, from packaged DMG source).
+
+### 1B design (frozen until stage-3 lands)
+- New pref `dom.speculation_rules.max_records_global` (RelaxedAtomicUint32,
+  mirror:always). Default 32 across the whole browser (per-document cap is
+  already 20; a few tabs of speculation stays allowed). SpeedMode bundle:
+  Performance leaves default; Fortress sets 0 (kills all speculative fetch —
+  privacy-consistent, compat-safe since prefetch is only a hint).
+- Enforcement in `PrefetchRecordParent::Init` right before `AsyncOpen`:
+  if a static `Atomic<uint32_t>` of live records >= cap → `mState=Canceled`,
+  return (identical to the same_site_only rejection path; no status event,
+  no fetch, child keeps its record until teardown — matching existing
+  Init-time rejection semantics).
+- Increment on `AsyncOpen` success only (mOutcome=Incomplete), decrement in
+  `ActorDestroy` behind a `mCountedInGlobal` flag → counts every live record
+  (in-flight fetches + completed records holding cache entries until expiry
+  or activation) = true outstanding-resource budget.
+- Parent-side, single main thread → check-then-act is race-free; counter is
+  global, not per-WGP, so multi-tab budget comes free.
+- 1C note: eagerness-based admission ranking would need an eagerness field
+  added to `SpeculativePrefetchArgs` (IPDL) — defer; cap alone already
+  bounds unbounded growth, and hover-fallback is always Moderate anyway.
+- Indicator truthfulness: SpeculativeLoadActivity marks tabs with in-flight
+  fetches — budget-rejected records never open a channel, so no activity
+  is shown. Correct.
+
+### Control-side talos `other` suite (2026-11-13, obj-opt = control build)
+- a11yr: OK (60s). ts_paint: OK — 20 cycles raw:
+  1070,1145,1157,1414,1418,1642,1718,1729,1763,1765,1768,1828,1831,1840,1860,
+  1900,1933,2034,2145,2203 ms; median ≈ 1767 ms.
+  MEASURED UNDER STAGE-1 BUILD CONTENTION — archive only, not an A/B number.
+- twinopen: TEST-UNEXPECTED-ERROR timeout (browser launched with test addons
+  sat idle 5 min; window-open driver did not drive — likely this terminal
+  session cannot present/focus windows). Suite ended after timeout.
+- For a fair startup A/B later: talos has no --binary flag, so swap the
+  preserved control .app into obj-opt/dist/ and run ts_paint with the machine
+  quiet, then restore the PGO .app. Plan recorded for post-stage-3.
+- Nimbus "main/nimbus-desktop-experiments has not been synced" console error
+  and sandbox_extension_issue_file_to_process warnings are environmental
+  noise observed in every launch; not failures.
