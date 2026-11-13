@@ -26,6 +26,27 @@ const MODE_BUNDLES = {
     // rescans during heavy DOM churn, at the cost of garbage living longer.
     "dom.cycle_collector.purple_limit": 2000,
     "dom.cycle_collector.skippable_suspect_growth": 1000,
+    // GPU pipeline: precompile WebRender shaders at startup (kills
+    // first-frame jank), push more of the SVG/vector raster path off the
+    // CPU blob renderer and onto the GPU, and grow the warm caches so
+    // images and canvas tiles stay resident instead of re-decoding.
+    "gfx.webrender.precache-shaders": true,
+    "gfx.webrender.max-partial-present-rects": 4,
+    "gfx.webrender.svg-shapes.ellipses": true,
+    "gfx.webrender.svg-shapes.strokes": true,
+    "gfx.webrender.svg-shapes.gradients": true,
+    "gfx.webrender.svg-text": true,
+    "gfx.canvas.accelerated.force-enabled": true,
+    "gfx.canvas.accelerated.cache-size": 512,
+    "gfx.canvas.accelerated.cache-items": 16384,
+    "image.mem.surfacecache.max_size_kb": 3145728,
+    // Keep more pages in the back/forward cache for instant restores.
+    "browser.sessionhistory.max_total_viewers": 16,
+    // OS scheduling: foreground content process runs ABOVE_NORMAL,
+    // main threads and the compositor run at raised thread priority.
+    "dom.ipc.processPriorityManager.foregroundRaisesMainThreadPriority": true,
+    "dom.ipc.processPriorityManager.foregroundRaisesProcessPriority": true,
+    "gfx.compositor.raise-thread-priority": true,
   },
   // 1 = Balanced — no managed prefs; restores defaults for anything we set.
   1: {},
