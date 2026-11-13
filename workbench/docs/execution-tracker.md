@@ -121,3 +121,15 @@ investigated-no-patch / reverted.
   + WPT subset testing/web-platform/tests/speculation-rules/
 - After PGO keep/revert: if keep, package PGO build (mach package); if
   revert, restore control mozconfig + rebuild for final ship.
+
+## NEXT-ACTION memo (session boundary)
+1. Wait for pgo-ab to finish (~48 runs, artifacts/ab-pgo-ab.log), then:
+   `cd workbench/bench && python3 report.py pgo-ab --aa && python3 report.py pgo-ab`
+2. PGO decision: keep if SP3/JS3 paired CI clears +2%; else revert obj-opt
+   to control mozconfig and rebuild for ship.
+3. Build 1B/1C patch (`./mach build binaries` after StaticPrefList regen;
+   full ./mach build if yaml forces it), run the three browser tests
+   listed above, then package if all green.
+4. Write dispositions into optimization-plan.md checkboxes, finish
+   perf-report.md numbers, update HANDOFF.md.
+5. Logical commits → push origin/firesocks → confirm remote HEAD.
