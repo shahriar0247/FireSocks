@@ -440,3 +440,4 @@ workbench/bench/results/*.browsertime.json
 workbench/bench/results/*.prov.json
 workbench/bench/results/*.FAILED
 workbench/mozconfigs/.mozconfig-pgo-use.resolved
+workbench/pgo-artifacts/
