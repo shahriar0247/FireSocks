@@ -136,3 +136,29 @@ Goal: prefetch the urlbar heuristic/top result's document so Enter = near-instan
 - Alternative considered and rejected: parent-side `PrefetchRecordParent` construction bypasses IPDL — actor registration is IPC-bound (Managed* list), so it would need an IPDL factory change too; document-side path reuses everything.
 
 Other checked-and-deferred knobs: `dom.ipc.processPrelaunch` already on (3 procs, 1s delay); bfcache `max_total_viewers=-1` auto (pinning risks memory); early hints + h3 + HTTPS-RR defaults already upstream-tuned; `network.predictor.*` family removed upstream except hover-on-ssl.
+
+## Cycle-collector cost on Speedometer 3 (profiled 2026-11-12)
+
+Gecko-profile of `speedometer3` (headless, iteration-2 profile,
+`--gecko-profile` run — samply's dyld wrapper breaks geckodriver, use the
+in-tree profiler). Content GeckoMain, 16.4s active / 29.3s wall:
+
+- JavaScript 26.3% | **GC/CC 26.1%** | Layout 20.0% | DOM 13.6%
+- CC alone ~19%: Free Snow White 10.3% (`SnowWhiteKiller::Visit` self 3.9%,
+  reached via `AsyncFreeSnowWhite` idle runnables) + Build Graph 7.3%.
+- Trigger path: `IsCCNeeded` fires `MANY_SUSPECTED` at purple>200, and
+  `ShouldForgetSkippable` runs on every +100 suspects — constant churn
+  under DOM-heavy workloads.
+
+**Landed:** both thresholds are now StaticPrefs
+(`dom.cycle_collector.purple_limit`, `...skippable_suspect_growth`,
+defaults = old constants). Performance bundle sets 2000/1000.
+A/B result: ~+0.5-1% — inside run-order drift (controls drifted
+37.2→38.3 across successive runs). Kept because the mechanism is real
+and Performance mode explicitly trades memory for fewer pauses; treat
+as a real-world jank dial more than a benchmark win.
+
+**A/B methodology lesson:** run-order drift on this machine is ~±1pt —
+future A/B must interleave C/T/C/T, not batch controls then treatments.
+JetStream showed the inverse: −8% decline across back-to-back runs
+(thermal throttle). Let the machine cool between suites.
