@@ -102,3 +102,63 @@ Sources checked during this review; upstream search is not a substitute for loca
 - Remove telemetry/updater/crash reporting merely to claim performance: no critical-path evidence; update/security policy needs separate treatment.
 - Compare sequential benchmark batches, profiled scores or different hardware: known drift and overhead invalidate attribution.
 - Promise fastest-browser status: requires same-machine cross-browser, multiple real journeys, compatibility and energy evidence; one synthetic score cannot establish it.
+
+---
+
+## Task dispositions (session 2, 2026-11-13)
+
+Status: done / in-progress / deferred(prereq) / investigated-no-patch /
+blocked(external). Details in investigation.md.
+
+- **0A** done — ab.sh/extract.py/report.py: ABBA blocks, unique runids,
+  provenance, failure-marking + streak abort, per-subtest JSON, bootstrap
+  CIs. Validated: reject-incomplete (exit 2), A/A zero-diff, real failure
+  caught (relative -b path bug found & fixed).
+- **0B** done — thermal_wait (CPU_Speed_Limit + loadavg<4 gates), caffeinate,
+  counterbalanced suite order, py3.11 shim, provenance JSON incl. power/
+  therm/uBOL sha/mozconfig+clang+binary hashes.
+- **0C** in-progress — journeys.sh; control ts_paint captured (median ~1767ms,
+  under build contention — archived); twinopen timed out in this env
+  (window driver could not present — limitation recorded); ts_paint A/B
+  planned via app swap (talos lacks --binary).
+- **0D** pending — attribution profile via raptor --gecko-profile on the
+  preserved apps after A/B (uses bundle, not source tree).
+- **1A** in-progress — full 3-stage PGO DONE building: merged.profdata 117MB
+  + jarlog; PGO app preserved. Rust -Cprofile-* propagation fixed at
+  generator (CI-style =cross option values; MOZ_PGO=1 env path drops them —
+  documented). A/B pgo-ab in flight → keep/revert by paired CI.
+- **1B/1C** implemented-pending-validation — global in-flight cap (4),
+  5MB retained-byte cap, oldest-eviction intent ranking
+  (PrefetchRecordParent), Fortress cap=0 drain. Unbuilt until A/B ends
+  (CPU quiet); tests: hover_fallback/hover_delays/urlbar speculative_connect.
+- **2A** evaluated — same-origin-only subset via Document.startPrefetch +
+  JSWindowActor is architecturally possible but hit-rate is small
+  (urlbar destinations are ~always cross-origin to current doc;
+  same_site_only rejects them at Init). Deferring implementation unless
+  journey data shows same-origin share worth it.
+- **2B** investigated-no-patch — urlbar results already carry ordering;
+  existing speculativeConnect on autofill/heuristic covers the
+  medium-intent tier; DNS-only for weak intent exists. Second history DB
+  explicitly rejected by plan — nothing left to add.
+- **2C** deferred — search result prefetch sends typed text before Enter
+  (privacy) and needs provider-compatible activation; plan requires opt-in
+  + reviewed route. Prereq: explicit user opt-in setting + provider terms.
+- **3A–3E** pending — census methodology defined; runs on final build
+  profiles (needs 0D first); patch only proven defects.
+- **4A–4D** pending — need 0D attribution on the final binary first;
+  historical attribution says JS/layout/GC-CC/DOM.
+- **5A** investigated-no-patch — prelaunch pool of 3 already landed;
+  raising pool size is the only lever and needs a RAM/p95 experiment —
+  deferred to the A/B-free machine window (low expected value).
+- **5B/5C/5D** pending — profile-driven (0D prerequisite).
+- **5E** evaluated — SpeculativeLoadActivity indicator landed and truthful;
+  pending-navigation feedback (input→next frame) is additive UI, not a
+  perf mechanism — deferred as optional UI polish, not plan-critical.
+- **6A** done — shallow snapshot ≈ upstream main 2026-11-11/12 (162.0a1);
+  upstream HEAD 09b8652 essentially current; no meaningful delta queue.
+- **6B** partial — PGO is the dominant compiler experiment (in flight);
+  arm64 sub-arch tuning has no safe supported knob (no runtime dispatch);
+  documented as investigated-limited.
+- **6C** deferred — prerender needs lifecycle/SW/permission/process-swap
+  inventory + design review; parallel layout is not a drop-in patch;
+  feasibility doc note in HANDOFF.
