@@ -370,6 +370,7 @@ var CustomizableUIInternal = {
       "vertical-spacer",
       "urlbar-container",
       "spring",
+      "speedmode-button",
       "downloads-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
       lazy.ippEnabled ? "ipprotection-button" : null,

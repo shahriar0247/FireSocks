@@ -918,6 +918,31 @@ SettingGroupManager.registerGroups({
             value: "2",
             l10nId: "speed-mode-fortress-option",
           },
+          {
+            id: "speedModeOverdrive",
+            value: "3",
+            l10nId: "speed-mode-overdrive-option",
+          },
+          {
+            id: "speedModeNetAggressive",
+            value: "4",
+            l10nId: "speed-mode-netaggressive-option",
+          },
+          {
+            id: "speedModeManyThreads",
+            value: "5",
+            l10nId: "speed-mode-manythreads-option",
+          },
+          {
+            id: "speedModeLight",
+            value: "6",
+            l10nId: "speed-mode-light-option",
+          },
+          {
+            id: "speedModeRequests",
+            value: "7",
+            l10nId: "speed-mode-requests-option",
+          },
         ],
       },
     ],

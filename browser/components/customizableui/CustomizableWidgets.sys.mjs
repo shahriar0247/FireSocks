@@ -26,6 +26,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "moz-src:///browser/components/sessionstore/SessionStore.sys.mjs",
   SharingUtils: "moz-src:///browser/components/sharing/SharingUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
+  SpeculativeLoadActivity:
+    "moz-src:///browser/components/speedmode/SpeculativeLoadActivity.sys.mjs",
 });
 
 const kPrefCustomizationDebug = "browser.uiCustomization.debug";
@@ -1148,3 +1150,107 @@ if (Services.prefs.getBoolPref("browser.mini-window.enabled", false)) {
     },
   });
 }
+
+const SPEED_MODE_ENTRIES = [
+  { mode: 0, l10nId: "speedmode-mode-performance" },
+  { mode: 1, l10nId: "speedmode-mode-balanced" },
+  { mode: 2, l10nId: "speedmode-mode-fortress" },
+  { mode: 3, l10nId: "speedmode-mode-overdrive" },
+  { mode: 4, l10nId: "speedmode-mode-netaggressive" },
+  { mode: 5, l10nId: "speedmode-mode-manythreads" },
+  { mode: 6, l10nId: "speedmode-mode-light" },
+  { mode: 7, l10nId: "speedmode-mode-requests" },
+];
+
+CustomizableWidgets.push({
+  id: "speedmode-button",
+  l10nId: "toolbar-button-speedmode",
+  type: "view",
+  viewId: "PanelUI-speedmode",
+  defaultArea: "nav-bar",
+  // The button is FireSocks-only upstream doesn't have a kVersion for it;
+  // introduce it via pref so existing profiles get it once.
+  _introducedInVersion: "pref",
+  _procSample: null,
+
+  onViewShowing(aEvent) {
+    let panelview = aEvent.target;
+    let doc = panelview.ownerDocument;
+    let win = doc.defaultView;
+    let list = lazy.PanelMultiView.getViewNode(doc, "speedmode-mode-list");
+    let status = lazy.PanelMultiView.getViewNode(doc, "speedmode-status");
+    list.textContent = "";
+
+    let active = Services.prefs.getIntPref("browser.speed.mode", 1);
+    for (let { mode, l10nId } of SPEED_MODE_ENTRIES) {
+      let btn = doc.createXULElement("toolbarbutton");
+      btn.className = "subviewbutton";
+      doc.l10n.setAttributes(btn, l10nId);
+      btn.dataset.speedMode = mode;
+      if (mode == active) {
+        btn.setAttribute("checked", "true");
+        btn.classList.add("subviewbutton-iconic");
+      }
+      btn.addEventListener("command", () => {
+        Services.prefs.setIntPref("browser.speed.mode", mode);
+      });
+      list.appendChild(btn);
+    }
+
+    let settingsBtn = lazy.PanelMultiView.getViewNode(
+      doc,
+      "speedmode-open-settings"
+    );
+    settingsBtn.onclick = () => {
+      lazy.CustomizableUI.hidePanelForNode(settingsBtn);
+      win.openPreferences("paneGeneral");
+    };
+
+    this._updateStats(panelview, status);
+  },
+
+  async _updateStats(panelview, status) {
+    let first;
+    try {
+      first = await ChromeUtils.requestProcInfo();
+    } catch {
+      status.textContent = "";
+      return;
+    }
+    let t0 = Cu.now();
+    // Give the panel a moment to render before the second sample.
+    await new Promise(r => panelview.ownerGlobal.setTimeout(r, 800));
+    if (!panelview.hasAttribute("current")) {
+      return;
+    }
+    let second;
+    try {
+      second = await ChromeUtils.requestProcInfo();
+    } catch {
+      return;
+    }
+    let dt = (Cu.now() - t0) / 1000; // seconds
+    if (dt <= 0) {
+      return;
+    }
+
+    const totalCpu = info =>
+      [info, ...info.children].reduce((s, p) => s + p.cpuTime, 0);
+    let cpuPct =
+      ((totalCpu(second) - totalCpu(first)) / 1e9 / dt) * 100;
+    let procs = second.children.length + 1;
+    let mem =
+      [second, ...second.children].reduce((s, p) => s + p.memory, 0) /
+      1073741824;
+    let gpu = second.children.find(p => p.type == "gpu");
+    let gpuText = gpu
+      ? ` · GPU proc ${(gpu.memory / 1048576) | 0} MB`
+      : "";
+    let inflight = 0;
+    for (let set of lazy.SpeculativeLoadActivity._inflight.values()) {
+      inflight += set.size;
+    }
+    let specText = inflight ? ` · ${inflight} prefetching` : "";
+    status.textContent = `CPU ~${cpuPct.toFixed(0)}% · ${procs} processes · ${mem.toFixed(1)} GB${gpuText}${specText}`;
+  },
+});

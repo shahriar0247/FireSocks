@@ -5,6 +5,7 @@
 MOZ_SRC_FILES += [
     "SpeculativeLoadActivity.sys.mjs",
     "SpeedMode.sys.mjs",
+    "TypeaheadLoader.sys.mjs",
 ]
 
 with Files("**"):

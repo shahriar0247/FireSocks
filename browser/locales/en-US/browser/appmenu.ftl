@@ -325,6 +325,28 @@ profiler-popup-presets-custom-label =
 appmenu-manage-history =
     .label = Manage History
 
+speedmode-panel-title = Speed mode
+
+speedmode-mode-performance =
+    .label = Performance
+speedmode-mode-balanced =
+    .label = Balanced
+speedmode-mode-fortress =
+    .label = Fortress
+speedmode-mode-overdrive =
+    .label = Overdrive (restart)
+speedmode-mode-netaggressive =
+    .label = Net aggressive
+speedmode-mode-manythreads =
+    .label = Many threads (restart)
+speedmode-mode-light =
+    .label = Light (restart)
+speedmode-mode-requests =
+    .label = Max requests
+
+speedmode-open-settings =
+    .label = Speed settings
+
 ## Sync promo shown at the bottom of the History and Bookmarks panels. Its
 ## variant depends on the user's account and Sync state. The sign-in heading and
 ## all three call-to-action labels are shared by both panels; the remaining

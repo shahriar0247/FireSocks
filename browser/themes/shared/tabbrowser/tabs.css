@@ -210,6 +210,8 @@
 
   &[orient="vertical"] {
     --tab-group-label-highlight-radius: 4px;
+    /* FireSocks: sharper Edge-like vertical tabs. */
+    --tab-border-radius: var(--border-radius-small);
 
     @media -moz-pref("browser.nova.enabled") {
       /* The hover highlight fills a full tab-height row and the tab group

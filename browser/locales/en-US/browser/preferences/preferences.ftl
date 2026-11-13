@@ -863,6 +863,26 @@ speed-mode-fortress-option =
     .label = Fortress
     .description = Strict tracking protection that blocks more trackers and cross-site cookies. Some sites may not work as expected.
 
+speed-mode-overdrive-option =
+    .label = Overdrive
+    .description = Everything in Performance plus no request pacing, deeper connection pools, and sites loading in the background as you type. Highest speed; highest network and memory use. Restart required.
+
+speed-mode-netaggressive-option =
+    .label = Net aggressive
+    .description = Aggressive connection reuse, deeper server pools, and background loading as you type — without process or GPU changes. For request-heavy dashboards.
+
+speed-mode-manythreads-option =
+    .label = Many threads
+    .description = More content processes and higher scheduling priority for the active tab. Uses more memory. Restart required.
+
+speed-mode-light-option =
+    .label = Light
+    .description = Fewer content processes and smaller caches. For low memory or battery. Restart required.
+
+speed-mode-requests-option =
+    .label = Max requests
+    .description = Deepest per-server connection pools with request pacing off. No speculative loading.
+
 ## FireSocks Mods Pane
 
 firesocks-mods-header = FireSocks Mods

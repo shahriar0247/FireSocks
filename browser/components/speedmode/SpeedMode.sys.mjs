@@ -62,7 +62,96 @@ const MODE_BUNDLES = {
     // next admission attempt also drains still-in-flight records first).
     "dom.speculation_rules.max_records_global": 0,
   },
+  // 3 = Overdrive — everything Performance does, plus request pacing off,
+  // deeper connection pools, zero hover delay and urlbar type-ahead
+  // document loading. Highest bandwidth and process count.
+  3: {
+    "network.http.speculative-parallel-limit": 60,
+    "network.http.max-connections": 400,
+    "network.http.max-persistent-connections-per-server": 16,
+    "network.http.request.max-start-delay": 0,
+    "network.http.pacing.requests.enabled": false,
+    "network.dnsCacheExpiration": 600,
+    "network.predictor.enable-hover-on-ssl": true,
+    "dom.prefetch_dns_for_anchor_https_document": true,
+    "dom.speculation_rules.enabled": true,
+    "dom.speculation_rules.hover_prefetch_all": true,
+    "dom.speculation_rules.moderate_hover_delay_ms": 0,
+    "dom.cycle_collector.purple_limit": 2000,
+    "dom.cycle_collector.skippable_suspect_growth": 1000,
+    "gfx.webrender.precache-shaders": true,
+    "gfx.webrender.max-partial-present-rects": 4,
+    "gfx.webrender.svg-shapes.ellipses": true,
+    "gfx.webrender.svg-shapes.strokes": true,
+    "gfx.webrender.svg-shapes.gradients": true,
+    "gfx.webrender.svg-text": true,
+    "gfx.canvas.accelerated.force-enabled": true,
+    "gfx.canvas.accelerated.cache-size": 512,
+    "gfx.canvas.accelerated.cache-items": 16384,
+    "image.mem.surfacecache.max_size_kb": 3145728,
+    "browser.sessionhistory.max_total_viewers": 16,
+    "dom.ipc.processPriorityManager.foregroundRaisesMainThreadPriority": true,
+    "dom.ipc.processPriorityManager.foregroundRaisesProcessPriority": true,
+    "gfx.compositor.raise-thread-priority": true,
+    "dom.ipc.processCount": 16,
+    "browser.urlbar.speculativeDocumentLoad": true,
+  },
+  // 4 = NetAggressive — connection and request limits only; no process or
+  // GPU changes. For request-heavy dashboards where the bottleneck is
+  // server fan-out.
+  4: {
+    "network.http.speculative-parallel-limit": 40,
+    "network.http.max-connections": 400,
+    "network.http.max-persistent-connections-per-server": 16,
+    "network.http.request.max-start-delay": 0,
+    "network.http.pacing.requests.enabled": false,
+    "network.dnsCacheExpiration": 300,
+    "network.predictor.enable-hover-on-ssl": true,
+    "dom.prefetch_dns_for_anchor_https_document": true,
+    "dom.speculation_rules.enabled": true,
+    "dom.speculation_rules.hover_prefetch_all": true,
+    "browser.urlbar.speculativeDocumentLoad": true,
+  },
+  // 5 = ManyThreads — more content processes and higher scheduling
+  // priority for the foreground tab. Higher RAM use.
+  5: {
+    "dom.ipc.processCount": 16,
+    "dom.ipc.processPriorityManager.foregroundRaisesMainThreadPriority": true,
+    "dom.ipc.processPriorityManager.foregroundRaisesProcessPriority": true,
+    "gfx.compositor.raise-thread-priority": true,
+    "browser.sessionhistory.max_total_viewers": 16,
+  },
+  // 6 = Light — fewer content processes and smaller caches; for battery
+  // or low-RAM conditions.
+  6: {
+    "dom.ipc.processCount": 4,
+    "browser.sessionhistory.max_total_viewers": 4,
+    "image.mem.surfacecache.max_size_kb": 524288,
+  },
+  // 7 = Requests — parallel-request tuning only (no speculation): deep
+  // per-server pools and pacing off.
+  7: {
+    "network.http.max-connections": 600,
+    "network.http.max-persistent-connections-per-server": 24,
+    "network.http.request.max-start-delay": 0,
+    "network.http.pacing.requests.enabled": false,
+    "network.dnsCacheExpiration": 300,
+  },
 };
+
+// Mode metadata for UI surfaces (speedmode toolbar panel, about:preferences).
+// `restart` marks modes whose bundle contains prefs that only take effect
+// on process start (dom.ipc.processCount).
+export const SPEED_MODE_INFO = [
+  { mode: 0, id: "performance", restart: false },
+  { mode: 1, id: "balanced", restart: false },
+  { mode: 2, id: "fortress", restart: false },
+  { mode: 3, id: "overdrive", restart: true },
+  { mode: 4, id: "netaggressive", restart: false },
+  { mode: 5, id: "manythreads", restart: true },
+  { mode: 6, id: "light", restart: true },
+  { mode: 7, id: "requests", restart: false },
+];
 
 function readApplied() {
   try {

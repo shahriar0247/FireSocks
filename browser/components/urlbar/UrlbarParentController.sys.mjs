@@ -32,6 +32,8 @@ const lazy = XPCOMUtils.declareLazy({
     "moz-src:///browser/components/urlbar/UrlbarProvidersManager.sys.mjs",
   SearchService: "moz-src:///toolkit/components/search/SearchService.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
+  TypeaheadLoader:
+    "moz-src:///browser/components/speedmode/TypeaheadLoader.sys.mjs",
   URILoadingHelper: "resource:///modules/URILoadingHelper.sys.mjs",
   UrlbarPrefs: "moz-src:///browser/components/urlbar/UrlbarPrefs.sys.mjs",
   UrlbarProviderOpenTabs:
@@ -1020,6 +1022,7 @@ export class UrlbarParentController {
             );
           }
         }
+        lazy.TypeaheadLoader.noteTopResult(this.browserWindow, result);
         return;
       }
       case "select":
@@ -1126,6 +1129,13 @@ export class UrlbarParentController {
     // when the current tab is re-selected.
     if (!params.avoidBrowserFocus) {
       browser.focus();
+    }
+
+    if (
+      where == "current" &&
+      lazy.TypeaheadLoader.adopt(this.browserWindow, url)
+    ) {
+      return { reverted: false, browserId: browser.browserId };
     }
 
     try {

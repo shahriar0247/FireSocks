@@ -1214,6 +1214,10 @@ toolbar-button-history =
   .label = History
   .tooltiptext = Show your history ({ $shortcut })
 
+toolbar-button-speedmode =
+  .label = Speed mode
+  .tooltiptext = Choose a performance preset
+
 toolbar-button-find =
   .label = Find
   .tooltiptext = Find in this page ({ $shortcut })
