@@ -95,6 +95,10 @@ const MODE_BUNDLES = {
     "gfx.compositor.raise-thread-priority": true,
     "dom.ipc.processCount": 16,
     "browser.urlbar.speculativeDocumentLoad": true,
+    // Paint as soon as there's anything to show — may flash unstyled
+    // content briefly on slow pages.
+    "nglayout.initialpaint.delay": 0,
+    "nglayout.initialpaint.delay_in_oopif": 0,
   },
   // 4 = NetAggressive — connection and request limits only; no process or
   // GPU changes. For request-heavy dashboards where the bottleneck is

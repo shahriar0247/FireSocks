@@ -1,0 +1,26 @@
+{
+  "policies": {
+    "3rdparty": {
+      "Extensions": {
+        "uBOLiteRedux@raymondhill.net": {
+          "defaultFiltering": "optimal",
+          "disableFirstRunPage": true,
+          "showBlockedCount": true,
+          "strictBlockMode": true,
+          "popupBlockMode": true,
+          "rulesets": [
+            "+annoyances-ai",
+            "+annoyances-cookies",
+            "+annoyances-notifications",
+            "+annoyances-others",
+            "+annoyances-overlays",
+            "+annoyances-social",
+            "+annoyances-widgets",
+            "+adguard-spyware-url",
+            "+block-lan"
+          ]
+        }
+      }
+    }
+  }
+}

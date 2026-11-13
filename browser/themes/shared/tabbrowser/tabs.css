@@ -3765,3 +3765,19 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
   white-space: nowrap;
   width: 100%;
 }
+
+/* FireSocks: Edge/Zen-style vertical tabs — sharper corners and a
+ * leading accent bar on the selected tab. */
+#tabbrowser-tabs[orient="vertical"] {
+  .tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
+    box-shadow: inset 3px 0 0 var(--focus-outline-color);
+  }
+
+  /* Keep the accent bar visible over the nova gradient border. */
+  @media -moz-pref("browser.nova.enabled") {
+    .tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
+      border-inline-start-color: var(--focus-outline-color);
+      border-inline-start-width: 2px;
+    }
+  }
+}

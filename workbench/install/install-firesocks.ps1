@@ -148,6 +148,14 @@ function Install-FireSocks {
     if ($v) { $version = $v.Matches[0].Groups[1].Value.Trim() }
   }
 
+  # Ship enterprise/extension policy (uBOLite managed storage) alongside
+  # the binary when a staged distribution dir is next to this script.
+  $distSrc = Join-Path $PSScriptRoot 'distribution'
+  if (Test-Path $distSrc) {
+    Copy-Item -Path "$distSrc\*" -Destination (Join-Path $InstallDir 'distribution') `
+      -Recurse -Force
+  }
+
   New-Item -Path $smiKey -Force | Out-Null
   Set-ItemProperty $smiKey -Name '(Default)' -Value $brand
   New-Item -Path "$smiKey\DefaultIcon" -Force | Out-Null
