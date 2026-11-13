@@ -17,7 +17,9 @@
 param(
   [string]$InstallDir = "$env:LOCALAPPDATA\FireSocks",
   [switch]$Uninstall,
-  [switch]$RemoveFiles
+  [switch]$RemoveFiles,
+  [ValidateSet('auto', 'power', 'high')]
+  [string]$GpuPreference = 'high'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,6 +71,8 @@ function Remove-FireSocks {
                      "$desktop\$brand.lnk")) {
     if (Test-Path $lnk) { Remove-Item $lnk -Force }
   }
+  Remove-ItemProperty 'HKCU:\SOFTWARE\Microsoft\DirectX\UserGpuPreferences' `
+    -Name $exe -ErrorAction SilentlyContinue
   if ($RemoveFiles -and (Test-Path $InstallDir)) {
     cmd /c "ping -n 2 127.0.0.1 >NUL & rmdir /s /q `"$InstallDir`""
   }
@@ -258,6 +262,19 @@ function Install-FireSocks {
   New-FireSocksShortcut "$startMenu\$brand Private Browsing.lnk" `
     '-private-window' 'FireSocks Private Browsing'
   New-FireSocksShortcut "$desktop\$brand.lnk" '' 'FireSocks Web Browser'
+
+  # Hybrid-GPU laptops: prefer the high-performance GPU for FireSocks
+  # (Windows Settings > System > Display > Graphics). 0=Let Windows
+  # decide, 1=Power saving, 2=High performance.
+  $gpuPrefs = 'HKCU:\SOFTWARE\Microsoft\DirectX\UserGpuPreferences'
+  New-Item -Path $gpuPrefs -Force | Out-Null
+  if ($GpuPreference -eq 'auto') {
+    Remove-ItemProperty $gpuPrefs -Name $exe -ErrorAction SilentlyContinue
+  } else {
+    $pref = @{ 'power' = 1; 'high' = 2 }[$GpuPreference]
+    if (-not $pref) { $pref = 2 }
+    Set-ItemProperty $gpuPrefs -Name $exe -Value "GpuPreference=$pref;"
+  }
 
   Write-Host "FireSocks registered as a browser (HKCU). Version: $version"
   Write-Host "Set as default: Settings > Apps > Default apps > FireSocks"
