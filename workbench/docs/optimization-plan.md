@@ -175,3 +175,54 @@ blocked(external). Details in investigation.md.
 - **6C** deferred — prerender needs lifecycle/SW/permission/process-swap
   inventory + design review; parallel layout is not a drop-in patch;
   feasibility doc note in HANDOFF.
+
+## Phase 7 — GPU offload + OS scheduling (firesocks2-branding, 2026-11-13)
+
+Investigation: page *load* is latency- and CPU-bound (network, parse, JS,
+layout); the GPU cannot take it over. What can move onto the GPU/VRAM is
+raster + warm caches; what can improve is OS scheduling of the
+foreground tab. Prior art: WebRender (already on), Pathfinder/Vello
+(vector raster only), parallel-layout research (never shipped —
+irregular workloads don't map to GPUs).
+
+### 7A — GPU raster bundle (Performance mode, commit 8dbb6c34)
+- `gfx.webrender.precache-shaders` — kill first-frame jank.
+- `gfx.webrender.svg-shapes.{ellipses,strokes,gradients}` +
+  `gfx.webrender.svg-text` — SVG primitives off the CPU blob renderer
+  onto WebRender paths (upstream defaults off).
+- `gfx.canvas.accelerated.force-enabled` — accelerated canvas even
+  when blocklisted; Performance-mode-only trade-off.
+- `gfx.webrender.max-partial-present-rects` 1→4 — partial present.
+- Validation needed: SVG reftest parity, MotionMark A/B, driver-crash
+  watch. Not yet A/B measured.
+
+### 7B — Warm caches / VRAM residency (commit 8dbb6c34)
+- `gfx.canvas.accelerated.cache-size` 256→512 MB, `cache-items`
+  8192→16384, `image.mem.surfacecache.max_size_kb` 2 GB→3 GB,
+  `browser.sessionhistory.max_total_viewers` →16 (bfcache residency).
+
+### 7C — OS scheduling (commit 740e7b3b)
+- New pref `dom.ipc.processPriorityManager.foregroundRaisesProcessPriority`
+  → foreground content process gets `ABOVE_NORMAL_PRIORITY_CLASS` on
+  Windows (it previously shared NORMAL; FOREGROUND_HIGH existed but was
+  never assigned by ComputePriority).
+- New pref `gfx.compositor.raise-thread-priority` → Compositor thread
+  `PRIORITY_HIGH` (Renderer already was).
+- `foregroundRaisesMainThreadPriority` Nightly-only pref wired into the
+  bundle (existing upstream behavior, now controllable).
+- Windows hybrid GPUs: installer writes `UserGpuPreferences` =
+  `GpuPreference=2` for firesocks.exe → discrete GPU instead of iGPU.
+
+### 7D — Not done (research-no-go)
+- GPU layout/style computation, GPU JS: irregular pointer-chasing
+  workloads, launch+transfer overhead exceeds op cost. Literature:
+  Meyerovich-Bodik 2010, Superconductor — no shipping browser does this.
+- GPU compute compositing engine (Vello-style): months of engine work;
+  only if profiles show blob/raster dominating — profiles do not.
+
+### 7E — Expected outcomes
+- Page-load latency: ~unchanged (not a GPU problem).
+- MotionMark / scroll / SVG-canvas pages / tab-switch: measurable gains;
+  CPU % during raster drops (SVG paths move to GPU).
+- Risks: dGPU power draw, blocklisted-driver crashes (canvas force),
+  minor SVG raster differences; all behind Performance mode.
