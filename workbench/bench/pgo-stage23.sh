@@ -17,8 +17,8 @@ GEN_CFG="$SRC/workbench/mozconfigs/mozconfig-pgo-generate"
 USE_CFG="$SRC/workbench/mozconfigs/mozconfig-pgo-use"
 USE_CFG_RESOLVED="$SRC/workbench/mozconfigs/.mozconfig-pgo-use.resolved"
 INSTR="$SRC/obj-pgo-instr"
-PROFDATA="$INSTR/merged.profdata"
-JARLOG="$INSTR/jarlog/en-US.log"
+PROFDATA="$SRC/workbench/pgo-artifacts/merged.profdata"
+JARLOG="$SRC/workbench/pgo-artifacts/jarlog/en-US.log"
 BUILD_PY="$HOME/.mozbuild/srcdirs/firesocks-3773b310c242/_virtualenvs/build/bin/python"
 LLVM_PROFDATA="$HOME/.mozbuild/clang/bin/llvm-profdata"
 LOGD="$SRC/artifacts/pgo"
@@ -38,8 +38,16 @@ do_profile() {
   cd "$INSTR"
   MOZCONFIG="$GEN_CFG" LLVM_PROFDATA="$LLVM_PROFDATA" JARLOG_FILE="$JARLOG" \
     "$BUILD_PY" "$SRC/build/pgo/profileserver.py" 2>&1 | tee "$LOGD/stage2-profileserver.log"
-  [ -s "$PROFDATA" ] || { echo "merged.profdata missing/empty" >&2; exit 1; }
-  [ -s "$JARLOG" ] || echo "WARN: jarlog missing — packing order optimization skipped" >&2
+  [ -s "$INSTR/merged.profdata" ] || { echo "merged.profdata missing/empty" >&2; exit 1; }
+  # Preserve outside the instrumented objdir so it can be cleaned to
+  # reclaim disk without losing the profile.
+  mkdir -p "$SRC/workbench/pgo-artifacts"
+  cp "$INSTR/merged.profdata" "$PROFDATA"
+  if [ -s "$INSTR/jarlog/en-US.log" ]; then
+    mkdir -p "$(dirname "$JARLOG")" && cp "$INSTR/jarlog/en-US.log" "$JARLOG"
+  else
+    echo "WARN: jarlog missing — packing order optimization skipped" >&2
+  fi
   echo "profdata: $(du -h "$PROFDATA" | cut -f1), jarlog: $(du -h "$JARLOG" 2>/dev/null | cut -f1)"
 }
 
