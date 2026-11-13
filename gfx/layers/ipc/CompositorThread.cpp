@@ -9,6 +9,7 @@
 #include "gfxGradientCache.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/SpinEventLoopUntil.h"
+#include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
@@ -97,6 +98,10 @@ CompositorThreadHolder::CreateCompositorThread() {
                 2048);
             nsCOMPtr<nsIThread> thread = NS_GetCurrentThread();
             static_cast<nsThread*>(thread.get())->SetUseHangMonitor(true);
+            if (StaticPrefs::gfx_compositor_raise_thread_priority()) {
+              static_cast<nsThread*>(thread.get())
+                  ->SetPriority(nsISupportsPriority::PRIORITY_HIGH);
+            }
 #ifdef XP_WIN
             mozilla::ForceToGuiThreadAndFixTebValidateHandlesFlag();
 #endif

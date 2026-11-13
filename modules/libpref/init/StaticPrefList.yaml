@@ -3879,6 +3879,13 @@
   type: bool
   value: @IS_NIGHTLY_BUILD@
   mirror: always
+
+# Whether foreground content processes run at ABOVE_NORMAL_PRIORITY_CLASS
+# (they otherwise share NORMAL_PRIORITY_CLASS with every other app).
+- name: dom.ipc.processPriorityManager.foregroundRaisesProcessPriority
+  type: bool
+  value: false
+  mirror: always
 #endif
 
 # This is a temporary preference intended to allow relaxing the new
@@ -7876,6 +7883,13 @@
   value: true
   mirror: always
 #endif
+
+# Run the Compositor thread at PRIORITY_HIGH like the Renderer thread
+# already does.
+- name: gfx.compositor.raise-thread-priority
+  type: bool
+  value: false
+  mirror: always
 
 #ifdef XP_DARWIN
 - name: gfx.core-animation.tint-opaque

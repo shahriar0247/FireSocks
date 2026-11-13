@@ -26,7 +26,10 @@ void SetProcessPriority(int aPid, ProcessPriority aPriority) {
       priority = IDLE_PRIORITY_CLASS;
     } else if (aPriority == PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE) {
       priority = BELOW_NORMAL_PRIORITY_CLASS;
-    } else if (aPriority == PROCESS_PRIORITY_FOREGROUND_HIGH) {
+    } else if (aPriority == PROCESS_PRIORITY_FOREGROUND_HIGH ||
+               (aPriority == PROCESS_PRIORITY_FOREGROUND &&
+                StaticPrefs::
+                    dom_ipc_processPriorityManager_foregroundRaisesProcessPriority())) {
       priority = ABOVE_NORMAL_PRIORITY_CLASS;
     }
 
