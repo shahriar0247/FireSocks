@@ -2837,6 +2837,21 @@
   value: 10   # in seconds
   mirror: always
 
+# Trigger a full CC when the purple buffer grows past this many suspected
+# objects. Larger values batch more garbage per collection at the cost of
+# memory staying allocated longer.
+- name: dom.cycle_collector.purple_limit
+  type: uint32_t
+  value: 200
+  mirror: always
+
+# Run a forget-skippable pass whenever this many objects were newly suspected
+# since the previous cleanup.
+- name: dom.cycle_collector.skippable_suspect_growth
+  type: uint32_t
+  value: 100
+  mirror: always
+
 # Whether the above pref has any effect at all.
 # Make sure cases like bug 1795380 work before trying to turn this off. See
 # bug 1680721 for some other context that might be relevant.

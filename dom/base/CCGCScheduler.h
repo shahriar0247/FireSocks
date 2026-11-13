@@ -9,6 +9,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/IdleTaskRunner.h"
 #include "mozilla/MainThreadIdlePeriod.h"
+#include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/ipc/IdleSchedulerChild.h"
 #include "nsCycleCollectionParticipant.h"
@@ -358,7 +359,9 @@ class CCGCScheduler {
   bool ShouldForgetSkippable(uint32_t aSuspectedCCObjects) const {
     // Only do a forget skippable if there are more than a few new objects
     // or we're doing the initial forget skippables.
-    return ((mPreviousSuspectedCount + 100) <= aSuspectedCCObjects) ||
+    return ((mPreviousSuspectedCount +
+             StaticPrefs::dom_cycle_collector_skippable_suspect_growth()) <=
+            aSuspectedCCObjects) ||
            mCleanupsSinceLastGC < kMajorForgetSkippableCalls;
   }
 
@@ -370,7 +373,8 @@ class CCGCScheduler {
     if (mNeedsFullCC != CCReason::NO_REASON) {
       return mNeedsFullCC;
     }
-    if (aSuspectedCCObjects > kCCPurpleLimit) {
+    if (aSuspectedCCObjects >
+        StaticPrefs::dom_cycle_collector_purple_limit()) {
       return CCReason::MANY_SUSPECTED;
     }
     if (aSuspectedCCObjects > kCCForcedPurpleLimit && mLastCCEndTime &&

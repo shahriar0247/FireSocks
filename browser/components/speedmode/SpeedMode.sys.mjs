@@ -22,6 +22,10 @@ const MODE_BUNDLES = {
     // Halve the hover→prefetch reaction delay (more false-positive
     // prefetches is the accepted trade-off in this mode).
     "dom.speculation_rules.moderate_hover_delay_ms": 100,
+    // Batch cycle-collector work harder: fewer graph walks and purple-buffer
+    // rescans during heavy DOM churn, at the cost of garbage living longer.
+    "dom.cycle_collector.purple_limit": 2000,
+    "dom.cycle_collector.skippable_suspect_growth": 1000,
   },
   // 1 = Balanced — no managed prefs; restores defaults for anything we set.
   1: {},
