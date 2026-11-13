@@ -85,3 +85,29 @@ Content main thread (21,121 samples):
   the mode dial is the intended control for that trade-off.
 - Idle 41.5% is harness-side (browsertime measurement loops), not
   browser slack.
+
+## Nav-timing bench (throwaway profiles, same machine, 2026-11)
+
+Via `workbench/bench/navtiming.py` (BiDi for Gecko, CDP for Chromium), 3 runs each:
+
+| URL / metric (ms) | FireSocks | Firefox | Edge |
+|---|---|---|---|
+| youtube.com DCL warm | 668-849 | 2279-2301 | 967-1044 |
+| youtube.com load warm | 770-915 | 2311-2355 | 995-1075 |
+| shopify.com DCL warm | 153-164 | 61-111 | 73-124 |
+| shopify.com load warm | 202-215 | 195-591 | 172-190 |
+| github.com DCL warm | 311-663 | 369-624 | 343-574 |
+| github.com load warm | 363-721 | 466-717 | 408-698 |
+
+Cold first loads are ~2.4-2.5s on YouTube for both Gecko builds (Edge
+cold unknown). FireSocks warm loads match or beat Edge; stock Firefox is
+the outlier (slower). The perceived "YouTube feels slower" gap vs
+Chromium is their omnibox prerender — now covered by
+TypeaheadLoader (hidden-tab load on top result + swap on Enter).
+
+## GPU verification (2026-11, RX 6700S)
+
+`GpuPreference=2` in HKCU UserGpuPreferences works: with
+webglsamples.org/aquarium running, `GPU Engine` counters show
+`pid_<firesocks>_luid_0x0b41abfe_engtype_3d` at ~22% (DWM sits on the
+iGPU luid). FireSocks renders on the discrete GPU.
