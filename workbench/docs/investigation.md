@@ -283,3 +283,13 @@ destruction + admission check at construction. M effort confirmed.
   throttling serial hover.
 - PointerDown already enacts Conservative candidates (upstream) — the other
   half of 1C is done; no pointer-trajectory tracking (not worth complexity).
+
+### 1B/1C outcome — implemented + validated (commit 59c69ba7fd)
+- Built on top of the PGO stage-3 objdir: full rebuild ~33min
+  (StaticPrefList regen), XUL 248.56MB.
+- Tests: hover_fallback 10/10, hover_delays 2/2, urlbar
+  speculative_connect 12/13 (1 conditional skip, 0 unexpected).
+- Note: A/B subjects are the PRESERVED apps (control-thinlto vs
+  PGO-without-1B). 1B is score-neutral by construction (it only gates
+  prefetch admission — benchmarks don't create prefetch records), so the
+  PGO A/B remains the honest signal for 1A keep/revert.

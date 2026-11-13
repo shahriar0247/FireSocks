@@ -133,3 +133,8 @@ investigated-no-patch / reverted.
 4. Write dispositions into optimization-plan.md checkboxes, finish
    perf-report.md numbers, update HANDOFF.md.
 5. Logical commits → push origin/firesocks → confirm remote HEAD.
+- DISK INCIDENT: APFS filled during pgo-ab run 3 (~00:57) → run failed
+  "No space left". Freed: obj-pgo-instr (~5GB, merged.profdata+jarlog
+  copied to workbench/pgo-artifacts/ first), *.lto.o temp dirs at root.
+  A/B relaunched as PID 91241 with clean results dir.
+  NOTE: unrelated ~/Documents/khoroch cargo build was the load source.
