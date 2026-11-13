@@ -35,3 +35,53 @@ tsvgx, tscrollx, etc.)
 - Headless benchmarks; tp6 needs headful session.
 - Disk constraint: instrumented objdir had slim config (--disable-tests).
 EOF
+## PGO vs ThinLTO control — paired A/B result (pgo-ab, 6 ABBA blocks)
+Decision: **PGO RETAINED** (rule: CI excludes 0 and median diff > +2% — both suites pass).
+
+| suite | control median | PGO median | median diff | CI95 | mean % | verdict |
+|---|---|---|---|---|---|---|
+| speedometer3 | ~37.5 | ~45.4 | +7.91 | [7.39, 8.38] | +21.1% | improvement |
+| jetstream3 | ~246 | ~259 | +13.25 | [11.53, 15.98] | +5.6% | improvement |
+
+A/A noise (same binary, control-vs-control):
+- speedometer3: mean diff -0.30, CI95 [-0.64, +0.03] — healthy
+- jetstream3: mean diff +0.11, CI95 [-0.86, +0.69] — healthy
+- Harness noise is ~8x smaller than the smallest measured effect; ABBA
+  ordering absorbed drift (post-build cooldown suppressed early SP3 runs
+  equally on both sides).
+
+Provenance: 48/48 browsertime runs + sidecars in workbench/bench/results/,
+manifest pgo-ab-manifest.json, SHA-256 of both binaries recorded per run.
+Raw report: results/pgo-ab-report.json.
+Caveat: SP3 +21% is an unusually large PGO delta — plausible because the
+=cross route additionally guides Rust codegen (upstream MOZ_PGO=1 silently
+dropped Rust profile flags), but it should be re-measured before quoting
+publicly. Do NOT claim "+21%" without restating harness/provenance context.
+
+## Startup A/B — talos ts_paint (20 cycles each, same machine, quiet)
+| build | ts_paint median | replicates range |
+|---|---|---|
+| ThinLTO control | 784.0 ms | 771–835 |
+| PGO (+ThinLTO)   | 750.0 ms | 730–776 (2 outliers 841, 860) |
+Δ ≈ -34 ms (~4.3% faster startup). Direction consistent with SP3/JS3.
+Method: apps swapped through obj-opt/dist (talos has no --binary flag);
+PERFHERDER_DATA captured despite a benign post-run schema-validation
+error ('firesocks' not in the app-name enum — rc=1, measurement intact).
+Note: earlier control ts_paint ≈1767ms was measured under build
+contention and is discarded; these were run on a quiet machine.
+
+## 0D attribution — symbolicated Gecko profile, final build (PGO+1B, Balanced)
+Source: raptor speedometer3 --gecko-profile on shipping binary;
+profile_speedometer3.zip (3 iterations, 66MB) — analyzed with profiler-cli.
+
+Content main thread (21,121 samples):
+  Idle 41.5% | JavaScript 20.2% | Layout 12.0% | GC/CC 11.1% |
+  DOM 5.7% | Other 5.6% | Graphics 2.4% | Profiler 1.0% | Network 0.5%
+
+- Largest jank event (175ms): nsPurpleBuffer::VisitEntries
+  (SnowWhiteKiller) — cycle-collector purple scan, matching the v2
+  evidence that motivated CC batching prefs in Performance mode.
+- 11.1% GC/CC share in Balanced remains the top non-work bucket —
+  the mode dial is the intended control for that trade-off.
+- Idle 41.5% is harness-side (browsertime measurement loops), not
+  browser slack.

@@ -1,0 +1,250 @@
+{
+ "label": "pgo-ab",
+ "tests": "speedometer3,jetstream3",
+ "blocks": 6,
+ "control": "/Users/ahmedshahriar/firesocks/workbench/controls/FireSocks-control-thinlto.app/Contents/MacOS/firesocks",
+ "treatment": "/Users/ahmedshahriar/firesocks/workbench/controls/FireSocks-pgo.app/Contents/MacOS/firesocks",
+ "exit_hint": 0,
+ "runs": {
+  "pgo-ab-jetstream3-control-b3-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b3-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b3-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b1-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b1-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b1-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b1-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b1-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b1-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b5-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b5-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b5-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b3-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b3-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b3-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b2-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b2-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b2-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b5-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b5-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b5-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b4-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b4-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b4-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b2-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b2-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b2-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b6-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b6-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b6-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b6-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b6-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b6-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b4-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b4-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b4-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b5-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b5-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b5-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b5-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b5-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b5-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b1-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b1-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b1-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b4-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b4-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b4-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b6-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b6-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b6-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b3-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b3-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b3-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b1-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b1-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b1-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b4-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b4-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b4-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b6-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b6-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b6-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b3-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b3-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b3-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b2-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b2-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b2-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b2-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b2-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b2-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b5-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b5-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b5-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b3-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b3-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b3-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b6-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b6-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b6-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b4-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b4-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b4-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b1-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b1-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b1-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b5-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b5-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b5-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b2-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b2-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b2-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b3-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b3-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b3-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b6-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b6-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b6-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b4-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b4-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b4-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b1-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b1-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b1-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b2-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b2-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b2-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b1-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b1-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b1-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b3-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b3-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b3-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b2-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b2-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b2-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b3-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b3-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b3-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b5-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b5-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b5-2.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b1-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b1-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b1-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b6-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b6-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b6-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-treatment-b2-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b2-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-treatment-b2-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-speedometer3-control-b4-0": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b4-0.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-speedometer3-control-b4-0.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-treatment-b5-3": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b5-3.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-treatment-b5-3.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b4-1": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b4-1.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b4-1.browsertime.json",
+   "failed": false
+  },
+  "pgo-ab-jetstream3-control-b6-2": {
+   "prov": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b6-2.prov.json",
+   "browsertime": "/Users/ahmedshahriar/firesocks/workbench/bench/results/pgo-ab-jetstream3-control-b6-2.browsertime.json",
+   "failed": false
+  }
+ }
+}

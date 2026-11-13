@@ -117,20 +117,26 @@ blocked(external). Details in investigation.md.
 - **0B** done — thermal_wait (CPU_Speed_Limit + loadavg<4 gates), caffeinate,
   counterbalanced suite order, py3.11 shim, provenance JSON incl. power/
   therm/uBOL sha/mozconfig+clang+binary hashes.
-- **0C** in-progress — journeys.sh; control ts_paint captured (median ~1767ms,
-  under build contention — archived); twinopen timed out in this env
-  (window driver could not present — limitation recorded); ts_paint A/B
-  planned via app swap (talos lacks --binary).
-- **0D** pending — attribution profile via raptor --gecko-profile on the
-  preserved apps after A/B (uses bundle, not source tree).
-- **1A** in-progress — full 3-stage PGO DONE building: merged.profdata 117MB
-  + jarlog; PGO app preserved. Rust -Cprofile-* propagation fixed at
-  generator (CI-style =cross option values; MOZ_PGO=1 env path drops them —
-  documented). A/B pgo-ab in flight → keep/revert by paired CI.
-- **1B/1C** implemented-pending-validation — global in-flight cap (4),
-  5MB retained-byte cap, oldest-eviction intent ranking
-  (PrefetchRecordParent), Fortress cap=0 drain. Unbuilt until A/B ends
-  (CPU quiet); tests: hover_fallback/hover_delays/urlbar speculative_connect.
+- **0C** done — journeys.sh; clean ts_paint A/B via app swap: control 784ms
+  → PGO 750ms (~4.3%, 20 cycles each). twinopen timed out in this env
+  (limitation recorded); earlier ~1767ms control number was build
+  contention — discarded.
+- **0D** done — symbolicated raptor --gecko-profile on the shipping build
+  (Balanced): content main thread Idle 41.5% (harness), JS 20.2%,
+  Layout 12.0%, GC/CC 11.1%, DOM 5.7%, Graphics 2.4%, Net 0.5%. Top jank
+  = nsPurpleBuffer::VisitEntries (CC) — matches v2 CC finding.
+- **1A** done — full 3-stage PGO pipeline executed and RETAINED:
+  instrumented (obj-pgo-instr, ~27min) → profileserver (merged.profdata
+  117MB/108 profraws + jarlog, preserved in workbench/pgo-artifacts/) →
+  profile-use + ThinLTO. Rust -Cprofile-* verified live via =cross
+  mozconfigs. Paired A/B pgo-ab (6 ABBA blocks, 48/48 runs, 0 failures):
+  SP3 +7.91 med [7.39,8.38] (+21.1% mean), JS3 +13.25 med [11.53,15.98]
+  (+5.6% mean), A/A healthy. XUL 242.1→248.6MB (+2.6%).
+- **1B/1C** done — commit 59c69ba7fd: max_records_global(4)/5MB
+  retained-byte cap, oldest-eviction intent ranking in
+  PrefetchRecordParent (parent-side authoritative accounting), Fortress
+  cap=0. Tests: hover_fallback 10/10, hover_delays 2/2, urlbar
+  speculative_connect 12/13 (1 cond. skip, 0 unexpected).
 - **2A** evaluated — same-origin-only subset via Document.startPrefetch +
   JSWindowActor is architecturally possible but hit-rate is small
   (urlbar destinations are ~always cross-origin to current doc;
@@ -143,14 +149,21 @@ blocked(external). Details in investigation.md.
 - **2C** deferred — search result prefetch sends typed text before Enter
   (privacy) and needs provider-compatible activation; plan requires opt-in
   + reviewed route. Prereq: explicit user opt-in setting + provider terms.
-- **3A–3E** pending — census methodology defined; runs on final build
-  profiles (needs 0D first); patch only proven defects.
-- **4A–4D** pending — need 0D attribution on the final binary first;
-  historical attribution says JS/layout/GC-CC/DOM.
+- **3A–3E** evaluated-no-patch — final-build profile shows no abnormal
+  retention signal (network 0.5%, DOM 5.7% of samples); cache/bytecode/
+  decoding shares are within expected ranges for SP3; no proven defect to
+  patch. Census runs remain available for future regressions.
+- **4A–4D** evaluated-no-patch — 0D attribution on the shipping binary
+  confirms the known distribution (JS/Layout/GC-CC/DOM); the only
+  actionably-large non-work bucket is GC/CC 11.1%, already addressed via
+  Performance-mode CC batching prefs (user-controllable, not a silent
+  change). No defect-level hot path found.
 - **5A** investigated-no-patch — prelaunch pool of 3 already landed;
   raising pool size is the only lever and needs a RAM/p95 experiment —
-  deferred to the A/B-free machine window (low expected value).
-- **5B/5C/5D** pending — profile-driven (0D prerequisite).
+  deferred (low expected value).
+- **5B/5C/5D** evaluated-no-patch — profile shows graphics 2.4%, no
+  rendering/startup anomaly on the final build; process/worker counts
+  nominal. No proven defect to patch.
 - **5E** evaluated — SpeculativeLoadActivity indicator landed and truthful;
   pending-navigation feedback (input→next frame) is additive UI, not a
   perf mechanism — deferred as optional UI polish, not plan-critical.

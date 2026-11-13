@@ -4,6 +4,61 @@ A performance-focused Firefox fork. Every speed/security trade-off is explicit
 and user-controllable through the **Speed Mode** dial in about:preferences —
 nothing is silently weakened.
 
+## Changelog — v3 (macOS arm64, 2026-11-13)
+
+### Build — macOS PGO, measured and kept
+- **Three-stage PGO pipeline on macOS**: instrumented build → profileserver
+  (Speedometer 3 + JetStream 3 workload) → profile-use + ThinLTO.
+  Profile: `merged.profdata` 117 MB (108 profraws) + jarlog.
+- **Rust PGO propagation fixed**: upstream `MOZ_PGO=1` silently drops
+  `-Cprofile-generate`/`-Cprofile-use` for Rust (env option yields a bare
+  flag, not the `cross` value `moz_pgo_rust` requires). Using CI-style
+  `--enable-profile-generate=cross` / `--enable-profile-use=cross`
+  mozconfigs instead — verified live in rustc and clang command lines.
+  No build-system patch needed.
+
+### Measured results — paired A/B vs immutable ThinLTO control
+6 ABBA/BAAB blocks, 48/48 runs, thermal+load-gated, per-run provenance +
+SHA-256, raw browsertime JSON retained. Harness:
+`workbench/bench/{ab.sh,extract.py,report.py}`.
+
+| Benchmark | Control | PGO | Delta | CI95 |
+|---|---|---|---|---|
+| Speedometer 3 | ~37.5 | ~45.4 | **+7.91 med (+21.1% mean)** | [7.39, 8.38] |
+| JetStream 3 | ~246 | ~259 | **+13.25 med (+5.6% mean)** | [11.53, 15.98] |
+| Startup (`ts_paint`) | 784 ms | 750 ms | ~4.3% | 20 cycles each |
+
+- A/A same-binary noise check healthy (CIs contain 0; noise ~8x below the
+  smallest effect). PGO retained per pre-registered decision rule.
+- Binary size: XUL 242.1 → 248.6 MB (+2.6%).
+- Profile attribution on the shipping build (SP3 content thread): JS 20.2%,
+  Layout 12.0%, GC/CC 11.1%, DOM 5.7%, Graphics 2.4%. Top jank: cycle-
+  collector purple scan — Performance mode's CC batching is the lever.
+- Caveat: +21% on SP3 is unusually large for PGO — partly because `=cross`
+  also guides Rust codegen (which upstream's `MOZ_PGO=1` never did).
+  Re-measure before quoting publicly; methodology in
+  `workbench/docs/perf-report.md`.
+
+### Global speculation budget (new)
+- **Browser-wide prefetch admission control** in the parent process
+  (`PrefetchRecordParent`): `dom.speculation_rules.max_records_global`
+  (default 4; 0 disables) + `dom.speculation_rules.max_transfer_bytes_global`
+  (default 5 MB) bound concurrent fetches and retained bytes.
+- **Oldest-first eviction**: at the cap, the oldest in-flight prefetch is
+  cancelled so fresh user intent (hover/tap) outranks stale speculation.
+- Lifecycle-safe accounting across completion, cancellation and actor
+  destruction — no leaks or double-decrements.
+- **Fortress mode sets the global cap to 0** — no new speculative fetches.
+- Tests: hover-fallback 10/10, hover-delays 2/2, urlbar speculative-connect
+  12/13 (1 conditional skip, 0 unexpected failures).
+
+### Validation
+- Speed-mode matrix verified on the shipped build: Performance applies the
+  full bundle, Balanced restores, Fortress applies strict prefs + cap 0;
+  live mode-switching works.
+- uBOL silent install on fresh profile, persists across relaunch.
+- Packaged `firesocks-162.0a1.en-US.mac.dmg` (113 MB).
+
 ## Changelog — v2
 
 ### Speed Mode

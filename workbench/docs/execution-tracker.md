@@ -138,3 +138,20 @@ investigated-no-patch / reverted.
   copied to workbench/pgo-artifacts/ first), *.lto.o temp dirs at root.
   A/B relaunched as PID 91241 with clean results dir.
   NOTE: unrelated ~/Documents/khoroch cargo build was the load source.
+
+## A/B COMPLETE (pgo-ab) — PGO RETAINED
+- 48/48 runs, 0 failures, 6 complete blocks each suite.
+- SP3: +7.91 median, CI95 [7.39,8.38], +21.1% mean → improvement.
+- JS3: +13.25 median, CI95 [11.53,15.98], +5.6% mean → improvement.
+- A/A noise healthy (CIs contain 0). Full numbers in perf-report.md.
+- NEXT: ts_paint startup A/B via app swap → package → smoke → docs → push.
+
+## FINAL (session 3 complete)
+- ts_paint A/B done: control 784ms → PGO 750ms (clean, 20cyc each).
+- 0D attribution profile captured + analyzed on shipping build.
+- Package: obj-opt/dist/firesocks-162.0a1.en-US.mac.dmg (113MB).
+- Smoke: fresh-profile uBOL install OK, relaunch persists, mode matrix
+  verified headed (Balanced→Performance switch applies bundle;
+  Fortress applies strict prefs + max_records_global=0).
+- All optimization-plan dispositions resolved (done/evaluated/deferred
+  with reasons). perf-report.md + HANDOFF.md + README v3 updated.
