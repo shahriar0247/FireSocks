@@ -240,3 +240,46 @@ destruction + admission check at construction. M effort confirmed.
 - Nimbus "main/nimbus-desktop-experiments has not been synced" console error
   and sandbox_extension_issue_file_to_process warnings are environmental
   noise observed in every launch; not failures.
+
+### 2A/2B scoping (urlbar scheduler + document bridge)
+- Existing urlbar path: `UrlbarParentController.speculativeConnect` handles
+  resultsadded/select/mousedown → `Services.io.speculativeConnect`
+  (TCP+TLS+DNS only, private-context gated, http-only on mousedown).
+  Landed already — typed/selected-result transport warming.
+- Document bridge would escalate select-confirmed candidates to a real
+  prefetch via `[ChromeOnly] Document.startPrefetch` through a
+  JSWindowActor — the only safe ownership path (PrefetchRecordChild is
+  created by the content document's SpeculationRulesManager; the parent
+  actor enforces principal/partition in Init).
+- CEILING confirmed: `PrefetchRecordParent::Init` enforces
+  same_site_only — records anchored to the CONTENT document's partition.
+  Urlbar destinations are almost always cross-origin to the current page
+  → they get canceled at Init. Only same-origin results (autofill deeper
+  into the current site) can ride the existing machinery. Cross-origin
+  document prefetch needs a new authorization model (explicit per-
+  navigation grant), not a bridge hack — defer with that prerequisite.
+- Tractable 2A subset: in the urlbar parent controller, on
+  selection-confirming signals for same-origin http(s) results, forward a
+  prefetch request via JSWindowActor to `document.startPrefetch(url)` —
+  bounded by the 1B global budget and per-document cap automatically.
+  Evaluating whether the hit-rate justifies it after the PGO A/B.
+
+### 1B/1C unified design (implementation after PGO A/B)
+- `dom.speculation_rules.max_records_global` (RelaxedAtomicUint32, default 4):
+  caps ONGOING fetches browser-wide (plan's "two browser-wide" starting point,
+  raised to 4 so serial hover prefetch isn't starved; tunable).
+- `dom.speculation_rules.max_retained_bytes_global` (default 5242880 = plan's
+  5MB): aggregate mTransferSize across live records; new Init rejected when
+  aggregate already at/over cap.
+- Live-record registry: static nsTArray<PrefetchRecordParent*> ordered by
+  creation (main thread only). Insert on AsyncOpen success, remove in
+  ActorDestroy.
+- 1C ranking via eviction-not-rejection: when count cap is hit, MarkCanceled
+  the OLDEST live record (latest user intent always outranks stale
+  speculation — this is the intent ranking that fits the architecture).
+  Byte-cap overflow → reject new (can't un-spend bytes).
+- SpeedMode bundle: Fortress sets max_records_global=0 (no speculative
+  fetch at all); Performance leaves default (4) — bounds waste without
+  throttling serial hover.
+- PointerDown already enacts Conservative candidates (upstream) — the other
+  half of 1C is done; no pointer-trajectory tracking (not worth complexity).

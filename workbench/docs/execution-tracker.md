@@ -84,7 +84,7 @@ investigated-no-patch / reverted.
 2. Preserve PGO app for A/B: `rsync -a --delete obj-opt/dist/FireSocks.app/
    workbench/controls/FireSocks-pgo.app/` (only if PGO build succeeds).
 3. A/B (quiet machine): `cd workbench/bench &&
-   BLOCKS=4 TESTS=speedometer3,jetstream3 bash ab.sh pgo-ab
+   BLOCKS=6 TESTS=speedometer3,jetstream3 bash ab.sh pgo-ab
    ../controls/FireSocks-control-thinlto.app
    ../controls/FireSocks-pgo.app`
    then `python3 report.py pgo-ab --aa` (A/A noise check) and
@@ -99,3 +99,25 @@ investigated-no-patch / reverted.
 6. Final: mode matrix smoke (browser.speed.mode 0/1/2), package
    (`MOZCONFIG=mozconfig ./mach package`), fresh+upgrade profile smoke,
    docs updates, logical commits, push, confirm remote HEAD.
+
+## Status notes (2026-11-13 late)
+
+- PGO stage-3 BUILD SUCCEEDED: obj-opt → preserved as
+  workbench/controls/FireSocks-pgo.app (XUL 248.6MB vs control 242.1MB).
+  Both apps launch (--version ok). merged.profdata 117MB, jarlog present.
+- A/B pgo-ab running: BLOCKS=6 SP3+JS3. First attempt failed on relative
+  -b path (harness failure-marking worked); fixed ab.sh to absolutize.
+  Watch: artifacts/ab-pgo-ab.log; then `report.py pgo-ab` + `--aa`.
+- 1B/1C patch WRITTEN (unbuilt, uncommitted — build after A/B):
+  StaticPrefList +max_records_global(4)/+max_transfer_bytes_global(5MB),
+  PrefetchRecordParent.{h,cpp} live-record registry + LeaveOngoing +
+  oldest-eviction + byte accounting, SpeedMode Fortress cap=0.
+  Verify: maxGlobal=0 drains all ongoing then rejects (Fortress switch).
+  Reentrancy safe: canceled channel → OnStopRequest→MarkCanceled idempotent.
+- Post-build validation tests:
+  ./mach test dom/base/test/browser_speculation_rules_hover_fallback.js
+    dom/base/test/browser_speculation_rules_hover_delays.js
+    browser/components/urlbar/tests/browser-search/browser_speculative_connect.js
+  + WPT subset testing/web-platform/tests/speculation-rules/
+- After PGO keep/revert: if keep, package PGO build (mach package); if
+  revert, restore control mozconfig + rebuild for final ship.

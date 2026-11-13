@@ -46,15 +46,19 @@ if [ ! -x "$PY_SHIM/python3" ]; then
 fi
 export PATH="$PY_SHIM:$PATH"
 
+abspath() {  # make path absolute (raptor resolves -b against its own cwd)
+  case "$1" in /*) echo "$1" ;; *) echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")" ;; esac
+}
+
 resolve_binary() {
   local b=$1
   if [ -d "$b" ] && [[ "$b" == *.app ]]; then
     for exe in firesocks firefox Nightly; do
-      [ -x "$b/Contents/MacOS/$exe" ] && { echo "$b/Contents/MacOS/$exe"; return; }
+      [ -x "$b/Contents/MacOS/$exe" ] && { abspath "$b/Contents/MacOS/$exe"; return; }
     done
     echo "ERROR: no executable in $b/Contents/MacOS" >&2; return 1
   elif [ -x "$b" ]; then
-    echo "$b"
+    abspath "$b"
   else
     echo "ERROR: binary not found: $b" >&2; return 1
   fi
