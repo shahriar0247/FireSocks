@@ -37,6 +37,21 @@ NS_INTERFACE_MAP_BEGIN(PrefetchRecordParent)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
 NS_INTERFACE_MAP_END
 
+namespace {
+// Live prefetch records across all tabs in creation order (parent process,
+// main thread). Backs the global fetch/transfer budgets and gives the
+// oldest-first eviction order.
+nsTArray<PrefetchRecordParent*> sLiveRecords;
+uint32_t sOngoingFetches = 0;
+uint64_t sRetainedBytes = 0;
+}  // namespace
+
+void PrefetchRecordParent::LeaveOngoing() {
+  if (mState == PrefetchState::Ongoing && sOngoingFetches > 0) {
+    --sOngoingFetches;
+  }
+}
+
 // Implements "start a referrer-initiated navigational prefetch".
 // Spec:
 // https://wicg.github.io/nav-speculation/prefetch.html#start-a-referrer-initiated-navigational-prefetch
@@ -125,6 +140,39 @@ void PrefetchRecordParent::Init(WindowGlobalParent* aWGP,
     return;
   }
 
+  if (sRetainedBytes >=
+      StaticPrefs::dom_speculation_rules_max_transfer_bytes_global()) {
+    LOG_SPECRULES(
+        ("PrefetchRecordParent::Init: this=%p transfer budget reached", this));
+    mState = PrefetchState::Canceled;
+    return;
+  }
+
+  const uint32_t maxGlobal =
+      StaticPrefs::dom_speculation_rules_max_records_global();
+  while (sOngoingFetches >= maxGlobal) {
+    PrefetchRecordParent* oldest = nullptr;
+    for (PrefetchRecordParent* record : sLiveRecords) {
+      if (record->mState == PrefetchState::Ongoing) {
+        oldest = record;
+        break;
+      }
+    }
+    if (!oldest) {
+      break;
+    }
+    LOG_SPECRULES(
+        ("PrefetchRecordParent::Init: evicting oldest in-flight %p for %p",
+         oldest, this));
+    oldest->MarkCanceled();
+  }
+  if (sOngoingFetches >= maxGlobal) {
+    LOG_SPECRULES(
+        ("PrefetchRecordParent::Init: this=%p global record cap reached", this));
+    mState = PrefetchState::Canceled;
+    return;
+  }
+
   // Use CreateForNonDocument (instead of passing a null aLoadingNode to
   // NS_NewChannelInternal) so the resulting LoadInfo carries aWGP's
   // BrowsingContext ID; otherwise DevTools can't attribute the prefetch
@@ -174,6 +222,8 @@ void PrefetchRecordParent::Init(WindowGlobalParent* aWGP,
     return;
   }
 
+  ++sOngoingFetches;
+  sLiveRecords.AppendElement(this);
   mOutcome = Outcome::Incomplete;
 }
 
@@ -464,6 +514,7 @@ PrefetchRecordParent::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Step 4: remove prior completed records with the same URL.
   wgp->DedupePrefetchRecords(this);
   // Step 5: set state to "completed".
+  LeaveOngoing();
   mState = PrefetchState::Completed;
   mOutcome = Outcome::Unused;
   // Step 6: trigger a prefetch status updated event ("ready").
@@ -593,6 +644,7 @@ void PrefetchRecordParent::MarkCanceled() {
 
   LOG_SPECRULES(("PrefetchRecordParent::MarkCanceled: this=%p", this));
 
+  LeaveOngoing();
   mState = PrefetchState::Canceled;  // Step 3: set state to "canceled"
   ReleaseCacheToken();
 
@@ -630,6 +682,10 @@ void PrefetchRecordParent::ActorDestroy(ActorDestroyReason aReason) {
     mChannel = nullptr;
   }
   ReleaseCacheToken();
+  LeaveOngoing();
+  sLiveRecords.RemoveElement(this);
+  sRetainedBytes = mTransferSize < sRetainedBytes ? sRetainedBytes - mTransferSize
+                                                : 0;
 
   RecordDataUsage();
 }
@@ -642,6 +698,7 @@ void PrefetchRecordParent::AccumulateTransferSize(nsIRequest* aRequest) {
   uint64_t size = 0;
   if (NS_SUCCEEDED(http->GetTransferSize(&size))) {
     mTransferSize += size;
+    sRetainedBytes += size;
   }
 }
 

@@ -37,6 +37,9 @@ const MODE_BUNDLES = {
     "browser.newtabpage.activity-stream.unifiedAds.spocs.enabled": false,
     "media.autoplay.default": 5,
     "permissions.default.desktop-notification": 2,
+    // No new speculative fetches in Fortress (global record cap 0; any
+    // next admission attempt also drains still-in-flight records first).
+    "dom.speculation_rules.max_records_global": 0,
   },
 };
 

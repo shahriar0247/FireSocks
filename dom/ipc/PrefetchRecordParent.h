@@ -127,6 +127,8 @@ class PrefetchRecordParent final : public PPrefetchRecordParent,
   bool MatchesNoVarySearchHint(nsIURI* aURL) const;
   void AccumulateTransferSize(nsIRequest* aRequest);
   void RecordDataUsage();
+  // Releases this record's slot in the global in-flight fetch budget.
+  void LeaveOngoing();
 
   // Prefetch record fields:
   // https://wicg.github.io/nav-speculation/prefetch.html#prefetch-record

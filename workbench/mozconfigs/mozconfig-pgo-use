@@ -1,0 +1,22 @@
+# Stage-3 PGO build — same as production mozconfig plus profile-use.
+# @PGO_PROFDATA@ and @PGO_JARLOG@ are substituted by the PGO runner.
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-opt
+ac_add_options --enable-release
+ac_add_options --enable-optimize
+ac_add_options --disable-debug
+ac_add_options --enable-debug-symbols
+ac_add_options --enable-application=browser
+ac_add_options --enable-lto=cross
+ac_add_options --with-branding=browser/branding/firesocks
+export MOZ_APP_BASENAME=FireSocks
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+mk_add_options MOZ_MAKE_FLAGS="-j4"
+export MOZILLA_OFFICIAL=1
+export BUILD_OFFICIAL=1
+export MOZ_LD64_KNOWN_GOOD=1
+export MOZ_SOURCE_REPO="https://github.com/shahriar0247/FireSocks"
+export MOZ_SOURCE_CHANGESET="$(git -C "$topsrcdir" rev-parse HEAD 2>/dev/null || true)"
+ac_add_options --enable-profile-use=cross
+ac_add_options --with-pgo-profile-path=@PGO_PROFDATA@
+ac_add_options --with-pgo-jarlog=@PGO_JARLOG@

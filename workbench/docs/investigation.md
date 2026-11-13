@@ -162,3 +162,134 @@ as a real-world jank dial more than a benchmark win.
 future A/B must interleave C/T/C/T, not batch controls then treatments.
 JetStream showed the inverse: −8% decline across back-to-back runs
 (thermal throttle). Let the machine cool between suites.
+
+## Execution session 2 (2026-11-12 →)
+
+### PGO propagation root cause (verified at source)
+`MOZ_PGO=1 mach build` appends env `MOZ_PROFILE_GENERATE=1`/`MOZ_PROFILE_USE=1`.
+For env-backed configure options, value "1" maps to `PositiveOptionValue()` —
+an EMPTY tuple (python/mozbuild/mozbuild/configure/options.py:456). But
+`moz_pgo_rust` (build/moz.configure/lto-pgo.configure:226) requires the literal
+value `"cross"` → `want_cross` false → `rust_pgo_flags` returns [] →
+`MOZ_RUSTFLAGS_TARGET_LTOABLE` never receives `-Cprofile-use` → generated
+`.cargo-library-spec.json` lacks it → rust objects embed a default
+ProfileSummary → ThinLTO link ProfileSummary conflict. This is why the Windows
+run needed hand-edited spec JSON.
+
+**Fix at the generator, not the generated file**: invoke configure the way CI
+does — `--enable-profile-generate=cross` / `--enable-profile-use=cross`
+(browser/config/mozconfigs/*/profile-generate, build/mozconfig.common:27).
+Value `("cross",)` passes `want_cross` → rust gets `-Cprofile-generate`/
+`-Cprofile-use=<path>` in the spec at generation time. No tree patch needed.
+Mozconfigs: `workbench/mozconfigs/mozconfig-pgo-{generate,use}`,
+driver `workbench/bench/pgo-stage23.sh`.
+
+### 1B scope note (global speculation budget)
+Enforcement point found: `SpeculationRulesManager::StartPrefetch`
+(dom/base/SpeculationRulesManager.cpp:26) — per-document cap already enforced
+(`mPrefetchRecords.Length() >= max_records_per_document`). Records are
+`PrefetchRecordChild` actors created via `WindowGlobalChild` IPDL
+(`SendPPrefetchRecordConstructor`); the PARENT side is `PrefetchRecordParent`
+registered on the WGP's ManagedPPrefetchRecordParent list. A browser-wide
+budget would count outstanding parent actors — feasible in parent process,
+needs a shared counter (per tab + global) in `PrefetchRecordParent::Init`/
+destruction + admission check at construction. M effort confirmed.
+
+### Repo/upstream facts
+- Shallow clone: root `be3b973f` = snapshot boundary (no upstream history).
+  Version 162.0a1, snapshot ≈ mozilla main 2026-11-11/12.
+- Upstream HEAD at session start: `09b865211` — essentially current.
+- Control binary preserved: `workbench/controls/FireSocks-control-thinlto.app`
+  (adhoc-signed app copy of the opt+ThinLTO build, from packaged DMG source).
+
+### 1B design (frozen until stage-3 lands)
+- New pref `dom.speculation_rules.max_records_global` (RelaxedAtomicUint32,
+  mirror:always). Default 32 across the whole browser (per-document cap is
+  already 20; a few tabs of speculation stays allowed). SpeedMode bundle:
+  Performance leaves default; Fortress sets 0 (kills all speculative fetch —
+  privacy-consistent, compat-safe since prefetch is only a hint).
+- Enforcement in `PrefetchRecordParent::Init` right before `AsyncOpen`:
+  if a static `Atomic<uint32_t>` of live records >= cap → `mState=Canceled`,
+  return (identical to the same_site_only rejection path; no status event,
+  no fetch, child keeps its record until teardown — matching existing
+  Init-time rejection semantics).
+- Increment on `AsyncOpen` success only (mOutcome=Incomplete), decrement in
+  `ActorDestroy` behind a `mCountedInGlobal` flag → counts every live record
+  (in-flight fetches + completed records holding cache entries until expiry
+  or activation) = true outstanding-resource budget.
+- Parent-side, single main thread → check-then-act is race-free; counter is
+  global, not per-WGP, so multi-tab budget comes free.
+- 1C note: eagerness-based admission ranking would need an eagerness field
+  added to `SpeculativePrefetchArgs` (IPDL) — defer; cap alone already
+  bounds unbounded growth, and hover-fallback is always Moderate anyway.
+- Indicator truthfulness: SpeculativeLoadActivity marks tabs with in-flight
+  fetches — budget-rejected records never open a channel, so no activity
+  is shown. Correct.
+
+### Control-side talos `other` suite (2026-11-13, obj-opt = control build)
+- a11yr: OK (60s). ts_paint: OK — 20 cycles raw:
+  1070,1145,1157,1414,1418,1642,1718,1729,1763,1765,1768,1828,1831,1840,1860,
+  1900,1933,2034,2145,2203 ms; median ≈ 1767 ms.
+  MEASURED UNDER STAGE-1 BUILD CONTENTION — archive only, not an A/B number.
+- twinopen: TEST-UNEXPECTED-ERROR timeout (browser launched with test addons
+  sat idle 5 min; window-open driver did not drive — likely this terminal
+  session cannot present/focus windows). Suite ended after timeout.
+- For a fair startup A/B later: talos has no --binary flag, so swap the
+  preserved control .app into obj-opt/dist/ and run ts_paint with the machine
+  quiet, then restore the PGO .app. Plan recorded for post-stage-3.
+- Nimbus "main/nimbus-desktop-experiments has not been synced" console error
+  and sandbox_extension_issue_file_to_process warnings are environmental
+  noise observed in every launch; not failures.
+
+### 2A/2B scoping (urlbar scheduler + document bridge)
+- Existing urlbar path: `UrlbarParentController.speculativeConnect` handles
+  resultsadded/select/mousedown → `Services.io.speculativeConnect`
+  (TCP+TLS+DNS only, private-context gated, http-only on mousedown).
+  Landed already — typed/selected-result transport warming.
+- Document bridge would escalate select-confirmed candidates to a real
+  prefetch via `[ChromeOnly] Document.startPrefetch` through a
+  JSWindowActor — the only safe ownership path (PrefetchRecordChild is
+  created by the content document's SpeculationRulesManager; the parent
+  actor enforces principal/partition in Init).
+- CEILING confirmed: `PrefetchRecordParent::Init` enforces
+  same_site_only — records anchored to the CONTENT document's partition.
+  Urlbar destinations are almost always cross-origin to the current page
+  → they get canceled at Init. Only same-origin results (autofill deeper
+  into the current site) can ride the existing machinery. Cross-origin
+  document prefetch needs a new authorization model (explicit per-
+  navigation grant), not a bridge hack — defer with that prerequisite.
+- Tractable 2A subset: in the urlbar parent controller, on
+  selection-confirming signals for same-origin http(s) results, forward a
+  prefetch request via JSWindowActor to `document.startPrefetch(url)` —
+  bounded by the 1B global budget and per-document cap automatically.
+  Evaluating whether the hit-rate justifies it after the PGO A/B.
+
+### 1B/1C unified design (implementation after PGO A/B)
+- `dom.speculation_rules.max_records_global` (RelaxedAtomicUint32, default 4):
+  caps ONGOING fetches browser-wide (plan's "two browser-wide" starting point,
+  raised to 4 so serial hover prefetch isn't starved; tunable).
+- `dom.speculation_rules.max_retained_bytes_global` (default 5242880 = plan's
+  5MB): aggregate mTransferSize across live records; new Init rejected when
+  aggregate already at/over cap.
+- Live-record registry: static nsTArray<PrefetchRecordParent*> ordered by
+  creation (main thread only). Insert on AsyncOpen success, remove in
+  ActorDestroy.
+- 1C ranking via eviction-not-rejection: when count cap is hit, MarkCanceled
+  the OLDEST live record (latest user intent always outranks stale
+  speculation — this is the intent ranking that fits the architecture).
+  Byte-cap overflow → reject new (can't un-spend bytes).
+- SpeedMode bundle: Fortress sets max_records_global=0 (no speculative
+  fetch at all); Performance leaves default (4) — bounds waste without
+  throttling serial hover.
+- PointerDown already enacts Conservative candidates (upstream) — the other
+  half of 1C is done; no pointer-trajectory tracking (not worth complexity).
+
+### 1B/1C outcome — implemented + validated (commit 59c69ba7fd)
+- Built on top of the PGO stage-3 objdir: full rebuild ~33min
+  (StaticPrefList regen), XUL 248.56MB.
+- Tests: hover_fallback 10/10, hover_delays 2/2, urlbar
+  speculative_connect 12/13 (1 conditional skip, 0 unexpected).
+- Note: A/B subjects are the PRESERVED apps (control-thinlto vs
+  PGO-without-1B). 1B is score-neutral by construction (it only gates
+  prefetch admission — benchmarks don't create prefetch records), so the
+  PGO A/B remains the honest signal for 1A keep/revert.

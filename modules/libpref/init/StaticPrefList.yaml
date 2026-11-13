@@ -5084,6 +5084,22 @@
   value: 20
   mirror: always
 
+# Browser-wide cap on prefetch fetches in flight (state "ongoing"). When a
+# new record would exceed the cap the oldest in-flight record is canceled,
+# so the freshest user intent always wins; 0 disables speculative fetches.
+- name: dom.speculation_rules.max_records_global
+  type: RelaxedAtomicUint32
+  value: 4
+  mirror: always
+
+# Browser-wide cap on aggregate on-the-wire bytes attributed to live
+# prefetch records (in-flight and completed-but-retained). New records are
+# refused once the cap is reached; existing records are left alone.
+- name: dom.speculation_rules.max_transfer_bytes_global
+  type: RelaxedAtomicUint32
+  value: 5242880
+  mirror: always
+
 # Maximum response body bytes allowed per prefetch record before the fetch
 # is cancelled with NS_ERROR_FILE_TOO_BIG. Enforced in
 # PrefetchRecordParent::OnDataAvailable. Set lower in tests to verify cap
