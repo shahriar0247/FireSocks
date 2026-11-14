@@ -123,9 +123,6 @@ JSObject* InitRegExpClass(JSContext* cx, HandleObject obj);
 [[nodiscard]] extern bool IsOptimizableRegExpObject(JSContext* cx,
                                                     unsigned argc, Value* vp);
 
-[[nodiscard]] extern bool CanOptimizeRegExpSpecies(JSContext* cx,
-                                                   unsigned argc, Value* vp);
-
 [[nodiscard]] extern bool RegExpBuiltinExec(JSContext* cx,
                                             Handle<RegExpObject*> regexp,
                                             Handle<JSString*> string,

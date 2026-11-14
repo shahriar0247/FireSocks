@@ -183,7 +183,6 @@ bool js::jit::CanInlineNativeCrossRealm(InlinableNative native) {
     case InlinableNative::IntrinsicIsObject:
     case InlinableNative::IntrinsicIsCrossRealmArrayConstructor:
     case InlinableNative::IntrinsicCanOptimizeArraySpecies:
-    case InlinableNative::IntrinsicCanOptimizeRegExpSpecies:
     case InlinableNative::IntrinsicToInteger:
     case InlinableNative::IntrinsicToLength:
     case InlinableNative::IntrinsicIsConstructing:

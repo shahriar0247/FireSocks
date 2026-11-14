@@ -7887,7 +7887,7 @@
 # Run the Compositor thread at PRIORITY_HIGH like the Renderer thread
 # already does.
 - name: gfx.compositor.raise-thread-priority
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 

@@ -259,7 +259,6 @@
   _(IntrinsicIsObject)                             \
   _(IntrinsicIsCrossRealmArrayConstructor)         \
   _(IntrinsicCanOptimizeArraySpecies)              \
-  _(IntrinsicCanOptimizeRegExpSpecies)             \
   _(IntrinsicToInteger)                            \
   _(IntrinsicToLength)                             \
   _(IntrinsicIsConstructing)                       \

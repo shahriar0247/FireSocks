@@ -153,7 +153,7 @@ static const ClassSpec RegExpObjectClassSpec = {
     js::regexp_static_props,
     js::regexp_methods,
     js::regexp_properties,
-    GenericFinishInit<WhichHasRealmFuseProperty::ProtoAndCtor>,
+    GenericFinishInit<WhichHasRealmFuseProperty::Proto>,
 };
 
 const JSClass RegExpObject::class_ = {

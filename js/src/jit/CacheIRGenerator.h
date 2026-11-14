@@ -852,7 +852,6 @@ class MOZ_RAII InlinableNativeIRGenerator {
   AttachDecision tryAttachRegExpHasCaptureGroups();
   AttachDecision tryAttachIsRegExpPrototypeOptimizable();
   AttachDecision tryAttachIsOptimizableRegExpObject();
-  AttachDecision tryAttachCanOptimizeRegExpSpecies();
   AttachDecision tryAttachIntrinsicRegExpBuiltinExec(InlinableNative native);
   AttachDecision tryAttachIntrinsicRegExpExec(InlinableNative native);
   AttachDecision tryAttachGetFirstDollarIndex();
