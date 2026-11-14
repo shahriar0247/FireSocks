@@ -1,0 +1,15 @@
+{"mode": "balanced", "site": "https://github.com/", "n": 2, "dns": 0, "tcp": 36, "tls": 19, "ttfb": 33, "dcl": 1110, "load": 1621, "res": 96}
+{"mode": "balanced", "site": "https://www.youtube.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 104, "dcl": 725, "load": 1666, "res": 28}
+{"mode": "balanced", "site": "https://www.shopify.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 27, "dcl": 871, "load": 1312, "res": 122}
+{"mode": "performance", "site": "https://github.com/", "n": 2, "dns": 0, "tcp": 34, "tls": 18, "ttfb": 46, "dcl": 886, "load": 1274, "res": 98}
+{"mode": "performance", "site": "https://www.youtube.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 124, "dcl": 1844, "load": 3680, "res": 81}
+{"mode": "performance", "site": "https://www.shopify.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 45, "dcl": 358, "load": 768, "res": 119}
+{"mode": "overdrive", "site": "https://github.com/", "n": 2, "dns": 0, "tcp": 36, "tls": 20, "ttfb": 44, "dcl": 794, "load": 1024, "res": 98}
+{"mode": "overdrive", "site": "https://www.youtube.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 110, "dcl": 1801, "load": 1877, "res": 29}
+{"mode": "overdrive", "site": "https://www.shopify.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 42, "dcl": 987, "load": 1300, "res": 122}
+{"mode": "netaggressive", "site": "https://github.com/", "n": 2, "dns": 2, "tcp": 43, "tls": 27, "ttfb": 34, "dcl": 894, "load": 1206, "res": 98}
+{"mode": "netaggressive", "site": "https://www.youtube.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 111, "dcl": 1672, "load": 2173, "res": 35}
+{"mode": "netaggressive", "site": "https://www.shopify.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 63, "dcl": 444, "load": 808, "res": 121}
+{"mode": "requests", "site": "https://github.com/", "n": 2, "dns": 2, "tcp": 33, "tls": 18, "ttfb": 32, "dcl": 951, "load": 1060, "res": 90}
+{"mode": "requests", "site": "https://www.youtube.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 110, "dcl": 1792, "load": 2307, "res": 35}
+{"mode": "requests", "site": "https://www.shopify.com/", "n": 2, "dns": 0, "tcp": 0, "tls": 0, "ttfb": 32, "dcl": 410, "load": 723, "res": 127}

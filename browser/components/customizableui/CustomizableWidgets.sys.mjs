@@ -1178,10 +1178,15 @@ CustomizableWidgets.push({
       let mode = Services.prefs.getIntPref("browser.speed.mode", 1);
       let entry = SPEED_MODE_ENTRIES.find(e => e.mode == mode);
       if (entry) {
-        aNode.ownerDocument.l10n
-          .formatValue(entry.l10nId)
-          .then(name => {
-            aNode.setAttribute("label", `Speed: ${name}`);
+        let doc = aNode.ownerDocument;
+        let ghost = doc.createXULElement("toolbarbutton");
+        doc.l10n.setAttributes(ghost, entry.l10nId);
+        Promise.resolve(doc.l10n.translateElements([ghost]))
+          .then(() => {
+            let name = ghost.label;
+            if (name) {
+              aNode.setAttribute("label", `Speed: ${name}`);
+            }
           })
           .catch(() => {});
       }

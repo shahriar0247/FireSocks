@@ -148,6 +148,28 @@ def launch_gecko(exe, prof):
     )
 
 
+def kill_by_port(port):
+    """Kill the process tree owning the debug port listener.
+
+    Firefox's launcher re-execs into a real browser process, so terminating
+    the Popen handle leaves the browser (and its BiDi session) alive."""
+    import re
+    try:
+        out = subprocess.run(
+            ["netstat", "-ano", "-p", "tcp"],
+            capture_output=True, text=True, timeout=15,
+        ).stdout
+        pids = set()
+        for line in out.splitlines():
+            if f":{port} " in line and "LISTENING" in line:
+                pids.add(line.split()[-1])
+        for pid in pids:
+            subprocess.run(["taskkill", "/PID", pid, "/T", "/F"],
+                           capture_output=True)
+    except Exception:
+        pass
+
+
 async def run_gecko(exe, urls, runs, prefs, clickthrough):
     prof = make_profile(prefs)
     proc = launch_gecko(exe, prof)
@@ -192,6 +214,7 @@ async def run_gecko(exe, urls, runs, prefs, clickthrough):
             proc.wait(10)
         except subprocess.TimeoutExpired:
             proc.kill()
+        kill_by_port(PORT)
 
 
 async def run_cdp(exe, urls, runs):

@@ -61,6 +61,7 @@ def main():
         if not sock:
             raise RuntimeError("marionette never came up")
         _hello, buf = recv_msg(sock, buf)
+        sock.settimeout(180)
         send_msg(sock, [0, 1, "WebDriver:NewSession", {"capabilities": {}}])
         resp, buf = recv_msg(sock, buf)
         if resp[2]:
@@ -94,6 +95,15 @@ def main():
             proc.wait(10)
         except subprocess.TimeoutExpired:
             proc.kill()
+        try:
+            out = subprocess.run(["netstat", "-ano", "-p", "tcp"],
+                                 capture_output=True, text=True, timeout=15).stdout
+            for line in out.splitlines():
+                if ":2828 " in line and "LISTENING" in line:
+                    subprocess.run(["taskkill", "/PID", line.split()[-1], "/T", "/F"],
+                                   capture_output=True)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
