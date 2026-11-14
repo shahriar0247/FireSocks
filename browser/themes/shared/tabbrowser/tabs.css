@@ -3780,4 +3780,24 @@ toolbar:not(#TabsToolbar) #firefox-view-button {
       border-inline-start-width: 2px;
     }
   }
+
+  /* Edge-style density: tighter rows, hairline separators. */
+  .tabbrowser-tab {
+    --tab-label-margin-inline: 6px;
+    border-block-end: 1px solid color-mix(in srgb, currentColor 6%, transparent);
+  }
+  .tabbrowser-tab[hidden] {
+    border-block-end: none;
+  }
+
+  /* Zen-style: close button only on hover/selected. */
+  .tab-close-button {
+    opacity: 0;
+    transition: opacity 120ms;
+  }
+  .tabbrowser-tab:hover .tab-close-button,
+  .tabbrowser-tab[selected] .tab-close-button,
+  .tab-close-button:focus-visible {
+    opacity: 1;
+  }
 }

@@ -95,6 +95,7 @@ const MODE_BUNDLES = {
     "gfx.compositor.raise-thread-priority": true,
     "dom.ipc.processCount": 16,
     "browser.urlbar.speculativeDocumentLoad": true,
+    "browser.speed.startup_warmup": true,
     // Paint as soon as there's anything to show — may flash unstyled
     // content briefly on slow pages.
     "nglayout.initialpaint.delay": 0,
@@ -115,6 +116,7 @@ const MODE_BUNDLES = {
     "dom.speculation_rules.enabled": true,
     "dom.speculation_rules.hover_prefetch_all": true,
     "browser.urlbar.speculativeDocumentLoad": true,
+    "browser.speed.startup_warmup": true,
   },
   // 5 = ManyThreads — more content processes and higher scheduling
   // priority for the foreground tab. Higher RAM use.

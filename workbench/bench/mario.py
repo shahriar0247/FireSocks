@@ -70,8 +70,14 @@ def main():
         mid = 3
         scripts = script.split("//__MARIO_NEXT__")
         for part in scripts:
-            send_msg(sock, [0, mid, "WebDriver:ExecuteScript",
-                            {"script": part, "args": [], "sandbox": "system"}])
+            is_async = "//__MARIO_ASYNC__" in part
+            part = part.replace("//__MARIO_ASYNC__", "")
+            if is_async:
+                send_msg(sock, [0, mid, "WebDriver:ExecuteAsyncScript",
+                                {"script": part, "args": [], "sandbox": "system"}])
+            else:
+                send_msg(sock, [0, mid, "WebDriver:ExecuteScript",
+                                {"script": part, "args": [], "sandbox": "system"}])
             resp, buf = recv_msg(sock, buf)
             print(json.dumps(resp[3], indent=2, default=str))
             mid += 1

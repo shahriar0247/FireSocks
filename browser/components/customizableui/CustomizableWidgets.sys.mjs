@@ -1173,6 +1173,34 @@ CustomizableWidgets.push({
   _introducedInVersion: "pref",
   _procSample: null,
 
+  onCreated(aNode) {
+    let update = () => {
+      let mode = Services.prefs.getIntPref("browser.speed.mode", 1);
+      let entry = SPEED_MODE_ENTRIES.find(e => e.mode == mode);
+      if (entry) {
+        aNode.ownerDocument.l10n
+          .formatValue(entry.l10nId)
+          .then(name => {
+            aNode.setAttribute("label", `Speed: ${name}`);
+          })
+          .catch(() => {});
+      }
+    };
+    update();
+    aNode._speedmodePrefObserver = { observe: update };
+    Services.prefs.addObserver("browser.speed.mode", aNode._speedmodePrefObserver);
+  },
+
+  onDestroyed(aDoc) {
+    let node = aDoc.getElementById("speedmode-button");
+    if (node?._speedmodePrefObserver) {
+      Services.prefs.removeObserver(
+        "browser.speed.mode",
+        node._speedmodePrefObserver
+      );
+    }
+  },
+
   onViewShowing(aEvent) {
     let panelview = aEvent.target;
     let doc = panelview.ownerDocument;
