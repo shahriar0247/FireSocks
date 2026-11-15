@@ -4,6 +4,66 @@ A performance-focused Firefox fork. Every speed/security trade-off is explicit
 and user-controllable through the **Speed Mode** dial in about:preferences —
 nothing is silently weakened.
 
+## Changelog — v4 (Windows x64, 2026-11-14)
+
+### First local Windows source build
+- Full optimized source build brought up on Windows: private MSVC/ATL
+  toolchain under `~/.mozbuild/vs` (system BuildTools lacked ATL),
+  `browser/branding/firesocks` branding, release opt + debug symbols,
+  no crashreporter/updater.
+- Packaged artifacts: `firesocks-162.0a1.en-US.win64.zip` +
+  `.installer.exe`; `install-firesocks.ps1` registers FireSocks as a
+  Windows browser (HKCU StartMenuInternet, protocols, ProgIDs, App Paths,
+  shortcuts, AUMID, uninstall metadata).
+- Live source overlay (`moz-src/` inside the install) keeps loose
+  front-end files hot-patchable without a rebuild; `.purgecaches` on sync.
+
+### Startup crash — root-caused and fixed
+- New build crashed at compositor init. cdb trace: `MOZ_CRASH` inside
+  `StaticPrefs::gfx_compositor_raise_thread_priority`, called from the
+  Compositor thread lambda in `CompositorThread.cpp`.
+- Cause: pref declared `type: bool` — readable on the main thread only —
+  but read on the Compositor thread. Fixed to `RelaxedAtomicBool`.
+- RegExp species fuse (v1) kept **reverted** on this build pending
+  re-validation; the fuse was not the crash cause.
+- Also flushed stale/truncated objects from two interrupted builds
+  (sandbox, llama.cpp model objects) that produced misleading link errors.
+
+### Speed Mode — presets, verified
+- Eight modes under `browser.speed.mode`: Balanced, Performance,
+  Overdrive, Net aggressive, Requests, Many threads, Light, Fortress.
+- **Live toolbar label** — button reads `Speed: <preset>` and updates on
+  mode change (runtime-verified: `Speed: Overdrive (restart)`).
+- **Startup warm-up** (`browser.speed.startup_warmup`, on in the
+  aggressive presets): idle-time speculative DNS/TLS connects to the top-3
+  frecent origins.
+- Vertical tabs: accent bar, pinned strip, hairline separators,
+  close-on-hover/selected-only density.
+
+### Preset A/B sweep — real nav timings (n=2, ms DCL/load)
+| Mode | github | shopify | youtube |
+|---|---|---|---|
+| balanced | 1110/1621 | 871/1312 | 725/1666 |
+| performance | 886/1274 | **358/768** | 1844/3680 |
+| overdrive | **794/1024** | 987/1300 | 1801/1877 |
+| netaggressive | 894/1206 | 444/808 | 1672/2173 |
+| requests | 951/1060 | 410/723 | 1792/2307 |
+
+- Aggressive presets win ~25–55% on request-heavy pages (github/shopify);
+  YouTube is not request-bound — no gain, possible cost. Pick mode per
+  workload.
+- Process probe: fission isolates per-site anyway, so
+  `dom.ipc.processCount` 4 vs 16 → same ~16 children, same ~1.7 GB —
+  the knob does little under site isolation.
+- GPU prefs within noise on nav timing (they affect paint/jank, not load
+  ms); RX 6700S verified as the render GPU (~22% 3D engine use).
+- BFCache verified live: prior entries report `isInBFCache=true`.
+- Click-through session bench: cross-site navs drop to 65–600 ms after
+  first cold load.
+- Harness: `workbench/bench/{navtiming.py,sweep.py,mario.py}` — launches
+  its own profile per preset, kills the process tree on exit (BiDi
+  sessions no longer leak).
+
 ## Changelog — v3 (macOS arm64, 2026-11-13)
 
 ### Build — macOS PGO, measured and kept
